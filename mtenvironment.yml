@@ -1,0 +1,16 @@
+name: mtenv
+dependencies:
+        - python=3.7
+        - spyder
+        - pip
+        - numpy
+        - pandas
+        - Matplotlib
+        - Scikit-Learn
+        - Scipy
+        - Seaborn
+        - Statsmodels
+        - pip:
+                - brainspace
+                - load_confounds
+                - tabulate
