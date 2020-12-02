@@ -11,17 +11,7 @@ Created on Tue Dec  1 19:21:37 2020
 from scipy.io import loadmat
 import pandas as pd
 
-import seaborn as sns
-from seaborn import load_dataset
 
-import numpy as np
-import matplotlib.pyplot as plt
-
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix
-
-from julearn import run_cross_validation
-from julearn.utils import configure_logging
 
 ### Loading Data
 ## data is stored in variable 'res', consists of 399 participants, it has the
@@ -94,16 +84,8 @@ Y_cd_transposed = Y_connectivity_data.transpose()
 print(Y_cd_transposed)
 
 ### Identification Analysis ##################################################
-## From Finn et al., 2005: First a database was created that consisted of 
-## all subjects conn. matrix, in the identification step the identity of the 
-## target matrix was predicted using a correlation mamtrix obtained from a 
-## different session, to predict subject identity similarity between current 
-## target matrix  and all other matrices was computed; similarity was defined as 
-## the pearson correlation between two vectors of edge values taken from the target 
-## matrix 
-
 ## I used the Identification Code from Finn et al., 2005 as an orientation
-count1 = 0
+count1 = 0 #number of correct if D is Database
 count2 = 0
 
 
@@ -114,8 +96,14 @@ for i in enumerate(Y_cd_transposed):
     tt_corr = Y_cd_transposed.iloc[:,i[0]]
     tt_to_all = D_cd_transposed.corrwith(tt_corr)
     max_value = max(tt_to_all)
-    max_index = tt_to_all.index(max_value)
+    max_index = tt_to_all.index[tt_to_all == max_value]
     
-    #if i == va_id:
-    #    count1 = count1 +1
+    if max_index[0] == i[1]:
+        count1 = count1 +1
+        print("accurate")
+    else:
+        print(max_index[0])
+        
+rate = count1/len(Y_cd_transposed.columns)
+        
 
