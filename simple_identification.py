@@ -7,9 +7,6 @@ Created on Tue Dec  1 19:21:37 2020
 """
 
 from scipy.io import loadmat
-import pandas as pd
-from tabulate import tabulate
-
 
 ## data is stored in variable 'res', consists of 399 participants, it has the
 ## following columns:
@@ -23,20 +20,18 @@ from tabulate import tabulate
 D = loadmat("/home/leonard/projects/master_project_files/dotmat_data/hcp_conn_unrelated_FULLHCP1LRFIX_dos160_roi_atlas_2x2x2.mat")
 
 
+## defining the variables
+connm = D['res']['connm']
+reho = D['res']['reho']
+alff = D['res']['alff']
+falff = D['res']['falff']
+sub = D['res']['sub']
 
 
-#print(type(D['res'][0][0]),D['res'][0][0].shape)
-
-#print([item.flat[0] for item in D['res'][0][0]])
-
-## converting data into a pandas data frame
 
 
-data = [[row.flat[0] for row in line] for line in D['res'][0]]
-columns = ['sub', 'connm', 'alff', 'falff', 'reho']
-data_frame = pd.DataFrame(data, columns=columns)
-
-print(tabulate(data_frame, headers = 'keys', tablefmt = 'psql'))
-
-
+print(connm.ndim)
+print(connm.shape)
+print(connm.size)
+print(connm.dtype)
 
