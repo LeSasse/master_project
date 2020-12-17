@@ -90,4 +90,3 @@ rate = count1/len(Y_cd_transposed.columns)
 
 print(str(rate*100) + '% of subjects in were accurately predicted from data in '
       'dataset D.')
-
