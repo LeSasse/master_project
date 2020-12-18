@@ -85,9 +85,10 @@ for k in enumerate(D_sub):
     N = round((math.sqrt(8*n+1)+1)/2)
     square_zeroes = np.zeros((N,N))
     ## sq_df = pd.DataFrame(sq) #if wanted as DataFrame
-    indices = np.nonzero(np.tril(np.ones((N,N)), -1))
+    indices = np.nonzero(np.triu(np.ones((N,N)), 1))
     square_zeroes[indices] = conn_data
     square_connm = square_zeroes + np.transpose(square_zeroes)
+    square_connm[square_connm == 0] = 1
     # b = pd.DataFrame(square_connm) # as DataFrame
     
     gm = GradientMaps(n_components=1, kernel = "pearson", approach = "dm",
@@ -123,9 +124,10 @@ for i in enumerate(Y_sub):
     N = round((math.sqrt(8*n+1)+1)/2)
     square_zeroes = np.zeros((N,N))
     ## sq_df = pd.DataFrame(sq) #if wanted as DataFrame
-    indices = np.nonzero(np.tril(np.ones((N,N)), -1))
+    indices = np.nonzero(np.triu(np.ones((N,N)), 1))
     square_zeroes[indices] = conn_data
     square_connm = square_zeroes + np.transpose(square_zeroes)
+    square_connm[square_connm == 0] = 1
     # b = pd.DataFrame(square_connm) # as DataFrame
     
     ## gradient construction using the matrices for each subject to be "identi-
@@ -148,7 +150,6 @@ rate = count1/len(Y_cd_transposed.columns)
 
 print(str(rate*100) + '% of subjects in were accurately predicted from data in '
       'dataset D.')
-
     
     
 
