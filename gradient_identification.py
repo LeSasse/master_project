@@ -135,7 +135,7 @@ for i in enumerate(Y_sub):
     gm = GradientMaps(n_components=1, kernel = "pearson", approach = "dm",
                       random_state=0)
     gm.fit(square_connm)
-    subject_gradient = gm.gradients_
+    subject_gradient = gm.gradients_[:,0]
     subject_gradient_dataframe = pd.DataFrame(subject_gradient)
     
     all_corr = gradient_dataframe_transposed.corrwith(subject_gradient_dataframe.iloc[:,0],
