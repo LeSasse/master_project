@@ -6,7 +6,7 @@ Gradients are computed using Brainspace (https://www.nature.com/articles/s42003-
 Other libraries used are scipy, pandas, numpy, and math as well as spyder.
 
 
-"simple_identification.py" is an example of subject identification using participants concatenated connectivity matrices. It uses the identification method from Finn et al., 2005 (https://www.researchgate.net/publication/282812326_Functional_connectome_fingerprinting_Identifying_individuals_using_patterns_of_brain_connectivity) where the pearson correlation is calculated between the connectivity data that is to be identified and all of the connectivity data from the database. The connectome that has the highest correlation with the target connectivity data is chosen.
+"simple_identification.py" is an example of subject identification using participants concatenated connectivity matrices. It uses the identification method from Finn et al., 2015 (https://www.researchgate.net/publication/282812326_Functional_connectome_fingerprinting_Identifying_individuals_using_patterns_of_brain_connectivity) where the pearson correlation is calculated between the connectivity data that is to be identified and all of the connectivity data from the database. The connectome that has the highest correlation with the target connectivity data is chosen.
 It leads to 98% accuracy in identification with the data I have.
 
 "gradient_identification.py" is an example of subject identification using participants main global gradients.
