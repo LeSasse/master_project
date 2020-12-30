@@ -6,6 +6,7 @@ after that. Gradients are computed using Brainspace
 (https://www.nature.com/articles/s42003-020-0794-7).
 Other libraries used are scipy, pandas, numpy, and math as well as spyder.
 
+using_pearson_correlation
 Scripts in this folder use pearson correlation as an identification method.
 
 "simple_identification.py" is an example of subject identification using 
@@ -33,4 +34,7 @@ gradient using procrustes rotation. When gradients are computed using a
 of the person to be identified in the target data using procrustes rotation.
 Therefore this takes a while longer to compute. 
 When using a pearson kernel and diffusion map embedding for gradient construction,
-it identifies with exactly the same accuracy as "alignment_method_one.py". 
+it identifies with exactly the same accuracy as "alignment_method_one.py".
+
+"load_data_and_functions.py" handles all functions that are essentially the same 
+for each different identification method script.
