@@ -11,7 +11,10 @@ Scripts in this folder use pearson correlation as an identification method.
 "simple_identification.py" is an example of subject identification using 
 participants concatenated connectivity matrices. It uses the identification 
 method from Finn et al., 2015 
-(https://www.researchgate.net/publication/282812326_Functional_connectome_fingerprinting_Identifying_individuals_using_patterns_of_brain_connectivity) where the pearson correlation is calculated between the connectivity data that is to be identified and all of the connectivity data from the database. The connectome that has the highest correlation with the target connectivity data is chosen.
+(https://www.researchgate.net/publication/282812326_Functional_connectome_fingerprinting_Identifying_individuals_using_patterns_of_brain_connectivity) 
+where the pearson correlation is calculated between the connectivity data that 
+is to be identified and all of the connectivity data from the database.
+The connectome that has the highest correlation with the target connectivity data is chosen.
 It leads to 98% accuracy in identification with the data I have.
 
 "gradient_identification.py" is an example of subject identification using 
@@ -30,8 +33,4 @@ gradient using procrustes rotation. When gradients are computed using a
 of the person to be identified in the target data using procrustes rotation.
 Therefore this takes a while longer to compute. 
 When using a pearson kernel and diffusion map embedding for gradient construction,
-it identifies ca. 0.25% accurately. Not sure why accuracy drops here. 
-Potential Reasons:
-1. problem with alignment
-2. mistake in the code
-3. identification method not suitable/not workin
+it identifies with exactly the same accuracy as "alignment_method_one.py". 

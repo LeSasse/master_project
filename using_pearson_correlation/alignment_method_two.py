@@ -10,7 +10,7 @@ Created on Sun Dec 20 12:37:48 2020
 
 import pandas as pd
 from brainspace.gradient import GradientMaps
-import numpy as np
+
 
 ## my own imports
 import load_data_and_functions as ldf
@@ -46,23 +46,20 @@ for index, subject in enumerate(Y_sub):
     gm.fit(subject_connm)
     subject_gradient = gm.gradients_[:,0]
     subject_gradient_dataframe = pd.DataFrame(subject_gradient)
-    gradient_array_database = np.zeros((len(D_sub), atlas_size))
+    
     
     ### Database Gradient Construction #######################################
     ### This will make sure that the gradients from database are always aligned
     ### to the target gradient to be identified
-    for index2, subject2 in enumerate(D_sub):
-        subject_matrix = ldf.get_conn_matrix(D_cd_transposed[subject2])
-    
-        database_gm = GradientMaps(n_components=1, kernel = kernel, 
-                                   approach = dimension_reduction,
-                                   random_state=0, alignment = alignment)
-        database_gm.fit(subject_matrix, reference = gm.gradients_)
-    
-        gradient_array_database[index2] = database_gm.aligned_[:,0]
-        gradient_dataframe = pd.DataFrame(gradient_array_database)
-        gradient_dataframe_transposed = gradient_dataframe.T
-        gradient_dataframe_transposed.columns = list(D_sub)
+    gradient_dataframe_transposed = ldf.create_gradient_database(
+        dataframe = D_cd_transposed,
+        subjects = D_sub, 
+        atlas_size = atlas_size, 
+        reference = gm.gradients_, 
+        kernel = kernel,
+        dimension_reduction = dimension_reduction, 
+        alignment = alignment
+        )
     
     all_corr = gradient_dataframe_transposed.corrwith(subject_gradient_dataframe.iloc[:,0],
                                                       method = 'pearson')

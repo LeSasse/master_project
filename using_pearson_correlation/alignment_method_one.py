@@ -10,7 +10,7 @@ Created on Sat Dec 19 19:25:20 2020
 
 import pandas as pd
 from brainspace.gradient import GradientMaps
-import numpy as np
+
 
 ## my own imports
 import load_data_and_functions as ldf
@@ -24,7 +24,6 @@ kernel = "pearson"
 dimension_reduction = "dm"
 alignment = "procrustes"
 atlas_size = 160
-
 
 ## Loading Data ##############################################################
 D, D_sub, D_connectivity_data, D_cd_transposed = ldf.load_data(database_path)
@@ -41,25 +40,16 @@ gref = GradientMaps(n_components=1, kernel = kernel,
 gref.fit(reference_participant)
 
 ### Database Gradient Construction ###########################################
-gradient_array_database = np.zeros((len(D_sub), atlas_size))
-for index, subject in enumerate(D_sub):
-    subject_matrix = ldf.get_conn_matrix(D_cd_transposed[subject])
-                                         
-    database_gm = GradientMaps(n_components=1,
-                               kernel = kernel,
-                               approach = dimension_reduction,
-                               random_state=0,
-                               alignment = alignment)
+gradient_dataframe_transposed = ldf.create_gradient_database(
+    dataframe = D_cd_transposed,
+    subjects = D_sub, 
+    atlas_size = atlas_size, 
+    reference = gref.gradients_, 
+    kernel = kernel,
+    dimension_reduction = dimension_reduction, 
+    alignment = alignment
+        )
     
-    database_gm.fit(subject_matrix, reference = gref.gradients_)
-    gradient_array_database[index] = database_gm.aligned_[:,0]
-
-## So now we have a database consisting of gradients from all participants in 
-## database D
-gradient_dataframe = pd.DataFrame(gradient_array_database)
-gradient_dataframe_transposed = gradient_dataframe.T
-gradient_dataframe_transposed.columns = list(D_sub)
-
 ### Identification Analysis ##################################################
 ### Target Gradients and Identification from Database
 
@@ -78,8 +68,9 @@ for index, subject in enumerate(Y_sub):
     subject_gradient = gm.aligned_[:,0]
     subject_gradient_dataframe = pd.DataFrame(subject_gradient)
     
-    all_corr = gradient_dataframe_transposed.corrwith(subject_gradient_dataframe.iloc[:,0],
-                                                      method = 'pearson')
+    all_corr = gradient_dataframe_transposed.corrwith(
+        subject_gradient_dataframe.iloc[:,0], 
+        method = 'pearson')
     max_value = max(all_corr)
     max_index = all_corr.index[all_corr == max_value]
     

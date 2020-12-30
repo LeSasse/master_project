@@ -22,6 +22,7 @@ from scipy.io import loadmat
 import pandas as pd
 import numpy as np
 import math
+from brainspace.gradient import GradientMaps
 
 def load_data(data_path):
     '''input is path that leads to data as a string,
@@ -53,5 +54,52 @@ def get_conn_matrix( X ):
     square_connm = square_zeros + np.transpose(square_zeros)
     return np.eye(N) + square_connm
 
+def create_gradient_database(dataframe,
+                             subjects, 
+                             atlas_size, 
+                             reference = 0, 
+                             kernel = 'pearson',
+                             dimension_reduction = 'dm', 
+                             alignment = 'procrustes'):
+    ''' Input transposed connectivity data to construct subjects gradient, list
+    of subjects, size of the atlas and a reference gradient to use for 
+    alignment (default is none). For gradient construction pearson kernel and 
+    dm approach are default'''
+    gradient_array_database = np.zeros((len(subjects), atlas_size)) 
+    
+    if np.all(reference == 0):
+        for index, subject in enumerate(subjects):
+            subject_matrix = get_conn_matrix(dataframe[subject])
+            
+            database_gm = GradientMaps(n_components=1, 
+                                   kernel = kernel, 
+                                   approach = dimension_reduction,
+                                   random_state=0,
+                                   alignment = alignment)
+        
+            database_gm.fit(subject_matrix)
+            gradient_array_database[index] = database_gm.gradients_[:,0]
+            
+        gradient_dataframe = pd.DataFrame(gradient_array_database)
+        gradient_dataframe_transposed = gradient_dataframe.T
+        gradient_dataframe_transposed.columns = list(subjects)
+    else:
+        for index, subject in enumerate(subjects):
+            subject_matrix = get_conn_matrix(dataframe[subject])
+    
+            database_gm = GradientMaps(n_components=1, 
+                                   kernel = kernel, 
+                                   approach = dimension_reduction,
+                                   random_state=0,
+                                   alignment = alignment)
+        
+            database_gm.fit(subject_matrix, reference = reference)
+            gradient_array_database[index] = database_gm.aligned_[:,0]
+            
+        gradient_dataframe = pd.DataFrame(gradient_array_database)
+        gradient_dataframe_transposed = gradient_dataframe.T
+        gradient_dataframe_transposed.columns = list(subjects)
+        
+    return gradient_dataframe_transposed
 
 
