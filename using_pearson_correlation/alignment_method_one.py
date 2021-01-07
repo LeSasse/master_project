@@ -24,7 +24,7 @@ target_path = (
 )
 
 kernel = "pearson"
-dimension_reduction = "dm"
+dimension_reduction = "le"
 alignment = "procrustes"
 atlas_size = 160
 
@@ -55,7 +55,7 @@ gradient_dataframe_transposed = ldf.create_gradient_database(
 
 ### Identification Analysis ##################################################
 ### Target Gradients and Identification from Database
-
+subjects_correctly_identified = []
 count1 = 0
 for index, subject in enumerate(Y_sub):
 
@@ -81,9 +81,10 @@ for index, subject in enumerate(Y_sub):
 
     if max_index[0] == subject:
         count1 = count1 + 1
-        # print(subject) to know who was correctly identified
+        subjects_correctly_identified.append(subject)
 
 rate = count1 / len(Y_cd_transposed.columns)
+
 
 print(
     str(rate * 100) + "% of subjects in were accurately predicted from data in "
