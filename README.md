@@ -38,3 +38,7 @@ it identifies with exactly the same accuracy as "alignment_method_one.py".
 
 "load_data_and_functions.py" handles all functions that are essentially the same 
 for each different identification method script.
+
+"control_condition.py" is a script for a control condition where identification
+is based on row-wise average pearson correlation from each participants correlation matrix.
+Running this script on the data I have gives about 46% accuracy.
