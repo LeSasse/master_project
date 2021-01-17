@@ -7,8 +7,10 @@ Created on Tue Dec  1 19:21:37 2020
 """
 
 ### Importing Modules ########################################################
+import sys
 
 ## my own imports
+sys.path.append("/home/leonard/projects/master_project_files/master_project/imports")
 import load_data_and_functions as ldf
 
 ### Global Variables #########################################################
