@@ -8,17 +8,6 @@ Other libraries used are scipy, pandas, numpy, and math as well as spyder.
 The Identification method is based on Finn et al., 2015:
 (https://www.researchgate.net/publication/282812326_Functional_connectome_fingerprinting_Identifying_individuals_using_patterns_of_brain_connectivity) 
 
-using_pearson_correlation
-Scripts in this folder use pearson correlation as an identification method.
-
-"simple_identification.py" is an example of subject identification using 
-participants concatenated connectivity matrices. It uses the identification 
-method from Finn et al., 2015 
-(https://www.researchgate.net/publication/282812326_Functional_connectome_fingerprinting_Identifying_individuals_using_patterns_of_brain_connectivity) 
-where the pearson correlation is calculated between the connectivity data that 
-is to be identified and all of the connectivity data from the database.
-The connectome that has the highest correlation with the target connectivity data is chosen.
-It leads to 98% accuracy in identification with the data I have.
 
 Folder "imports":
 
