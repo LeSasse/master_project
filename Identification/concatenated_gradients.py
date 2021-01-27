@@ -14,8 +14,12 @@ from brainspace.gradient import GradientMaps
 import sys
 
 ## my own imports
-sys.path.append("/home/leonard/projects/master_project_files/master_project/imports")
+sys.path.append("../imports")
 import load_data_and_functions as ldf
+from datetime import datetime
+
+print( "Starting..." )
+
 
 ### Global Variables/User input ##############################################
 
@@ -49,7 +53,8 @@ which = 0
 ## for num_grads, if concatenation = true, then this defines which gradients
 ## concatenated, if concatenation = false then this will choose which
 ## individual gradient is used for identification
-num_grads = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+## num_grads = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
+num_grads = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
 
 ##############################################################################
 
@@ -72,10 +77,13 @@ iteration_count = 0
 D, D_sub, D_connectivity_data, D_cd_transposed = ldf.load_data(database_path)
 Y, Y_sub, Y_connectivity_data, Y_cd_transposed = ldf.load_data(target_path)
 
+totaltime =datetime.timestamp( datetime.now() )
 for spars in sparsity:
     for n_gradients in num_grads:
         for kernel in kernels:
             for dimension_reduction in dimension_reductions:
+
+                starttime =datetime.timestamp( datetime.now() )
 
                 ##############################################################
                 ### Gradient Construction ####################################
@@ -154,8 +162,14 @@ for spars in sparsity:
                 ngradients.append(str(n_gradients))
                 iteration_count = iteration_count + 1
                 sparsities.append(spars)
+                stoptime =datetime.timestamp( datetime.now() )
                 print(str(iteration_count))
                 print(" out of 375 iterations.")
+                print("(this round took: " + str(stoptime-starttime) + " sec )")
+                print("(     total took: " + str(stoptime-totaltime) + " sec )")
+                print("(  avg per round: " + str((stoptime-totaltime)/iteration_count) + " sec )")
+
+
                 print(
                     "Settings are " + str(kernel) + " " + str(dimension_reduction) + "."
                 )
