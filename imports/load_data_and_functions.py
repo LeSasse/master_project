@@ -65,32 +65,81 @@ def create_gradient_database(
     kernel="pearson",
     dimension_reduction="dm",
     alignment="procrustes",
+    sparsity=0.9,
+    which_gradient=0,
+    n_gradients=1,
+    concatenate=False,
 ):
-    """Input transposed connectivity data to construct subjects gradient, list
-    of subjects, size of the atlas and a reference gradient to use for
+    """dataframe = connectivity data to construct subjects gradient, subjects = list
+    of subjects, atlas_size = size of the atlas, reference =  a reference gradient to use for
     alignment (default is none). For gradient construction pearson kernel and
-    dm approach are default"""
-    gradient_array_database = np.zeros((len(subjects), atlas_size))
+    dm approach are default, if concatenate = False (default), only individual gradients are chosen, if concatenate = True, then gradients are aligned and then concatenate to use for analysis"""
+    if concatenate == False:
 
-    for index, subject in enumerate(subjects):
-        subject_matrix = get_conn_matrix(dataframe[subject])
+        gradient_array_database = np.zeros((len(subjects), atlas_size))
 
-        database_gm = GradientMaps(
-            n_components=1,
-            kernel=kernel,
-            approach=dimension_reduction,
-            random_state=0,
-            alignment=alignment,
-        )
+        for index, subject in enumerate(subjects):
+            subject_matrix = get_conn_matrix(dataframe[subject])
 
-        if np.all(reference == None):
-            database_gm.fit(subject_matrix)
-            gradient_array_database[index] = database_gm.gradients_[:, 0]
-        else:
-            database_gm.fit(subject_matrix, reference=reference)
-            gradient_array_database[index] = database_gm.aligned_[:, 0]
+            database_gm = GradientMaps(
+                n_components=n_gradients,
+                kernel=kernel,
+                approach=dimension_reduction,
+                random_state=0,
+                alignment=alignment,
+            )
 
-    gradient_dataframe = pd.DataFrame(gradient_array_database)
-    gradient_dataframe_transposed = gradient_dataframe.T
-    gradient_dataframe_transposed.columns = list(subjects)
-    return gradient_dataframe_transposed
+            if np.all(reference == None):
+                database_gm.fit(subject_matrix, sparsity=sparsity)
+                gradient_array_database[index] = database_gm.gradients_[
+                    :, which_gradient
+                ]
+            else:
+                database_gm.fit(subject_matrix, reference=reference, sparsity=sparsity)
+                gradient_array_database[index] = database_gm.aligned_[:, which_gradient]
+
+        gradient_dataframe = pd.DataFrame(gradient_array_database)
+        gradient_dataframe_transposed = gradient_dataframe.T
+        gradient_dataframe_transposed.columns = list(subjects)
+        return gradient_dataframe_transposed
+
+    elif concatenate == True:
+        gradient_array_database = np.zeros((len(subjects), atlas_size * n_gradients))
+
+        for index, subject in enumerate(subjects):
+            subject_matrix = get_conn_matrix(dataframe[subject])
+
+            database_gm = GradientMaps(
+                n_components=n_gradients,
+                kernel=kernel,
+                approach=dimension_reduction,
+                random_state=0,
+                alignment=alignment,
+            )
+            if np.all(reference == None):
+                database_gm.fit(subject_matrix, sparsity=sparsity)
+                # gradient_array_database[index] = database_gm.gradients_[:,0]
+            else:
+                database_gm.fit(subject_matrix, reference=reference, sparsity=sparsity)
+                # gradient_array_database[index] = database_gm.aligned_[:,0]
+
+            grad = [None] * n_gradients
+            for i in range(n_gradients):
+                if np.all(reference == None):
+                    # norm_array = np.linalg.norm(database_gm.aligned[:,i])
+                    # normalised = database_gm.aligned_[:,i]/norm_array
+                    grad[i] = database_gm.gradients_[:, i]  # normalised
+                else:
+                    # norm_array = np.linalg.norm(database_gm.gradients_[:,i])
+                    # normalised = database_gm.gradients_[:,i]/norm_array
+                    grad[i] = database_gm.aligned_[:, i]  # normalised
+
+                grad = np.array(grad, dtype=object)
+            grad_stacked = np.hstack(grad)
+
+            gradient_array_database[index] = grad_stacked
+
+        gradient_dataframe = pd.DataFrame(gradient_array_database)
+        gradient_dataframe_transposed = gradient_dataframe.T
+        gradient_dataframe_transposed.columns = list(subjects)
+        return gradient_dataframe_transposed
