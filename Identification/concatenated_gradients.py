@@ -35,7 +35,7 @@ target_path = (
 
 ##############################################################################
 ### path and name for output data
-output_file = "spearman_n_gradients(3).csv"
+output_file = "varying_n_components.csv"
 ##############################################################################
 
 
@@ -49,12 +49,12 @@ sparsity = [0.9]
 kernels = ["pearson", "spearman", "normalized_angle", "gaussian", "cosine"]
 dimension_reductions = ["pca", "dm", "le"]
 concatenate = False
-which = 0
+
 ## for num_grads, if concatenation = true, then this defines which gradients
 ## concatenated, if concatenation = false then this will choose which
 ## individual gradient is used for identification
 ## num_grads = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
-num_grads = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
+num_grads = [1, 2, 3, 4, 5]
 
 ##############################################################################
 
@@ -69,7 +69,17 @@ ngradients = []
 gradient_used = []
 sparsities = []
 iteration_count = 0
+total_iterations = len(sparsity) * len(num_grads) * len(kernels) * len(dimension_reductions)
 ##############################################################################
+
+
+##############################################################################
+## ask for confirmation of settings
+print("total iterations == " + str(total_iterations))
+print("atlas size == " + str(atlas_size))
+print("number of gradients to iterate " + str(num_grads))
+print("concatenate == " + str(concatenate))
+
 
 
 ##############################################################################
