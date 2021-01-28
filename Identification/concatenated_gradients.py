@@ -54,7 +54,7 @@ concatenate = False
 ## concatenated, if concatenation = false then this will choose which
 ## individual gradient is used for identification
 ## num_grads = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
-num_grads = [1, 2, 3, 4, 5]
+num_grads = [2]
 
 ##############################################################################
 
@@ -138,7 +138,8 @@ for spars in sparsity:
                         alignment=alignment,
                     )
                     gm.fit(subject_connm, reference=gref.gradients_, sparsity=spars)
-
+                    
+                    
                     ### stacking subject gradients ###########################
                     grad = [None] * n_gradients
                     for i in range(n_gradients):
@@ -148,10 +149,8 @@ for spars in sparsity:
                     grad_stacked = np.hstack(grad)
 
                     subject_gradient_dataframe = pd.DataFrame(grad_stacked)
-
-                    subject_gradient = gm.aligned_[:, 0]
-                    subject_gradient_dataframe = pd.DataFrame(subject_gradient)
-
+                
+                    
                     ### identification #######################################
                     all_corr = gradient_dataframe_transposed.corrwith(
                         subject_gradient_dataframe.iloc[:, 0], method="spearman"
@@ -174,14 +173,14 @@ for spars in sparsity:
                 sparsities.append(spars)
                 stoptime =datetime.timestamp( datetime.now() )
                 print(str(iteration_count))
-                print(" out of 375 iterations.")
+                print(" out of " + str(total_iterations) + " iterations.")
                 print("(this round took: " + str(stoptime-starttime) + " sec )")
                 print("(     total took: " + str(stoptime-totaltime) + " sec )")
                 print("(  avg per round: " + str((stoptime-totaltime)/iteration_count) + " sec )")
 
 
                 print(
-                    "Settings are " + str(kernel) + " " + str(dimension_reduction) + "."
+                    "Settings are " + str(kernel) + " " + str(dimension_reduction) + ", sparsity == " + str(spars) + "."
                 )
                 print("number of Gradients: " + str(n_gradients))
                 print("Accuracy was " + str(rate))
