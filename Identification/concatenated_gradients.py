@@ -12,11 +12,12 @@ import numpy as np
 import pandas as pd
 from brainspace.gradient import GradientMaps
 import sys
+from datetime import datetime
 
 ## my own imports
 sys.path.append("../imports")
 import load_data_and_functions as ldf
-from datetime import datetime
+
 
 print( "Starting..." )
 
@@ -87,6 +88,11 @@ print("concatenate == " + str(concatenate))
 D, D_sub, D_connectivity_data, D_cd_transposed = ldf.load_data(database_path)
 Y, Y_sub, Y_connectivity_data, Y_cd_transposed = ldf.load_data(target_path)
 
+
+
+
+
+
 totaltime =datetime.timestamp( datetime.now() )
 for spars in sparsity:
     for n_gradients in num_grads:
@@ -94,22 +100,23 @@ for spars in sparsity:
             for dimension_reduction in dimension_reductions:
 
                 starttime =datetime.timestamp( datetime.now() )
-
+                
                 ##############################################################
-                ### Gradient Construction ####################################
-
+                ### Gradient Construction
+                ##        
                 ## Reference Gradient for Alignment ##########################
                 ## In thires alignment method I will align all gradients to one 
-                ##reference gradient.
+                ## reference gradient.
                 reference_participant = ldf.get_conn_matrix(D_cd_transposed.iloc[:, 0])
                 gref = GradientMaps(
                     n_components=n_gradients,
                     kernel=kernel,
                     approach=dimension_reduction,
                     random_state=0,
-                )
+                    )
                 gref.fit(reference_participant)
 
+               
                 ### Database Gradient Construction ###########################
                 gradient_dataframe_transposed = ldf.create_gradient_database(
                     dataframe=D_cd_transposed,
@@ -143,7 +150,7 @@ for spars in sparsity:
                     ### stacking subject gradients ###########################
                     ### or just take principal gradient
                     if concatenate == True:
-                        print("concatenate for target subject is true")
+                        #print("concatenate for target subject is true")
                         grad = [None] * n_gradients
                         for i in range(n_gradients):
                             #norm_array = np.linalg.norm(gm.aligned_[:,i])
@@ -177,6 +184,8 @@ for spars in sparsity:
                 iteration_count = iteration_count + 1
                 sparsities.append(spars)
                 stoptime =datetime.timestamp( datetime.now() )
+                
+                ## get output to see where loop at
                 print(str(iteration_count))
                 print(" out of " + str(total_iterations) + " iterations.")
                 print("(this round took: " + str(stoptime-starttime) + " sec )")
@@ -191,6 +200,7 @@ for spars in sparsity:
                 print("Accuracy was " + str(rate))
                 print("Sparsity was " + str(spars))
 
+## uniting dataframes
 accuracy = {
     "kernels": kernel_used,
     "dimension reduction": dreduction_used,
@@ -198,7 +208,6 @@ accuracy = {
     "n_gradients": ngradients,
     "sparsity": sparsities,
 }
-
 
 df_accuracy = pd.DataFrame(accuracy)
 df_accuracy.to_csv(
