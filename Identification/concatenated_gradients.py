@@ -51,8 +51,8 @@ dimension_reductions = ["pca", "dm", "le"]
 concatenate = False
 
 ## for num_grads, if concatenation = true, then this defines which gradients
-## concatenated, if concatenation = false then this will choose which
-## individual gradient is used for identification
+## concatenated, if concatenation = false then principal gradient will still be chosen
+## and only n_components argument goes up
 ## num_grads = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
 num_grads = [1]
 
@@ -99,7 +99,7 @@ for spars in sparsity:
                 ### Gradient Construction ####################################
 
                 ## Reference Gradient for Alignment ##########################
-                ## In this alignment method I will align all gradients to one 
+                ## In thires alignment method I will align all gradients to one 
                 ##reference gradient.
                 reference_participant = ldf.get_conn_matrix(D_cd_transposed.iloc[:, 0])
                 gref = GradientMaps(
