@@ -11,7 +11,7 @@ Created on Sat Jan 16 14:10:18 2021
 import pandas as pd
 import numpy as np
 import sys
-
+from datetime import datetime
 
 ## my own imports
 sys.path.append("/home/leonard/projects/master_project_files/master_project/imports")
@@ -43,8 +43,14 @@ Y, Y_sub, Y_connectivity_data, Y_cd_transposed = ldf.load_data(target_path)
 
 areas = []
 rates = []
-for area in range(atlas_size):
 
+iteration_count = 0
+total_iterations = atlas_size
+totaltime =datetime.timestamp( datetime.now() )
+for area in range(atlas_size):
+    
+    
+    starttime =datetime.timestamp( datetime.now() )
     control_condition_database = np.zeros((len(D_sub), atlas_size))
 
     for index, subject in enumerate(D_sub):
@@ -59,7 +65,7 @@ for area in range(atlas_size):
     control_condition_database = control_condition_database.T
     control_condition_database.columns = list(D_sub)
 
-    ### Identification Analysis ##################################################
+    ### Identification Analysis ##############################################
     ### Target subjects and Identification from Database
     ### in this control condition subjects are identified using their average
     ### connectome (row wise average pearson correlation from subject matrix)
@@ -82,16 +88,24 @@ for area in range(atlas_size):
             subjects_correctly_identified.append(subject)
 
     rate = count1 / len(Y_cd_transposed.columns)
+    
+    ### dataframing relevant information
+    iteration_count = iteration_count + 1
     areas.append(area)
     rates.append(rate)
+    stoptime =datetime.timestamp( datetime.now() )
+    print(" out of " + str(total_iterations) + " iterations.")
+    print("(this round took: " + str(stoptime-starttime) + " sec )")
+    print("(     total took: " + str(stoptime-totaltime) + " sec )")
+    print("(  avg per round: " + str((stoptime-totaltime)/iteration_count) + " sec )")
 
 accuracy = {"areas": areas, "rates": rates}
 df_accuracy = pd.DataFrame(accuracy)
 
-df_accuracy.to_csv(
-    "/home/leonard/projects/master_project_files/output_datafiles/accuracy_by_area_spearman.csv",
-    index=False,
-)
+#df_accuracy.to_csv(
+#    "/home/leonard/projects/master_project_files/output_datafiles/accuracy_by_area_spearman.csv",
+#    index=False,
+#)
 
 """   
     print(
