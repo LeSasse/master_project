@@ -46,7 +46,7 @@ atlas_size = 160
 
 ### to add different sparsities another loop has to be added
 sparsity = [0.9]
-kernels = ["pearson", "spearman", "normalized_angle", "gaussian", "cosine"]
+kernels = ["pearson", "spearman", "normalized_angle", "gaussian","cosine"]
 dimension_reductions = ["pca", "dm", "le"]
 concatenate = False
 
@@ -54,7 +54,7 @@ concatenate = False
 ## concatenated, if concatenation = false then this will choose which
 ## individual gradient is used for identification
 ## num_grads = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
-num_grads = [2]
+num_grads = [1]
 
 ##############################################################################
 
@@ -127,7 +127,7 @@ for spars in sparsity:
                 ### Target Gradients and Identification from Database ########
 
                 count1 = 0  # the count variable keeps track of iterations with
-                # accurate identification
+                            # accurate identification
                 for index, subject in enumerate(Y_sub):
                     subject_connm = ldf.get_conn_matrix(Y_cd_transposed[subject])
                     gm = GradientMaps(
@@ -141,15 +141,20 @@ for spars in sparsity:
                     
                     
                     ### stacking subject gradients ###########################
-                    grad = [None] * n_gradients
-                    for i in range(n_gradients):
-                        # norm_array = np.linalg.norm(gm.aligned_[:,i])
-                        grad[i] = gm.aligned_[:, i]  # /norm_array
-                        grad = np.array(grad, dtype=object)
-                    grad_stacked = np.hstack(grad)
-
-                    subject_gradient_dataframe = pd.DataFrame(grad_stacked)
-                
+                    ### or just take principal gradient
+                    if concatenate == True:
+                        print("concatenate for target subject is true")
+                        grad = [None] * n_gradients
+                        for i in range(n_gradients):
+                            #norm_array = np.linalg.norm(gm.aligned_[:,i])
+                            grad[i] = gm.aligned_[:, i]  #/norm_array
+                            grad = np.array(grad, dtype=object)
+                        grad_stacked = np.hstack(grad)
+                        subject_gradient_dataframe = pd.DataFrame(grad_stacked)
+                    elif concatenate == False:
+                        grad = gm.aligned_[:,0]
+                        subject_gradient_dataframe = pd.DataFrame(grad)
+                        #print("concatenate for target subject is false")
                     
                     ### identification #######################################
                     all_corr = gradient_dataframe_transposed.corrwith(
