@@ -13,6 +13,7 @@ import pandas as pd
 from brainspace.gradient import GradientMaps
 import sys
 from datetime import datetime
+import time
 
 ## my own imports
 sys.path.append("../imports")
@@ -132,7 +133,10 @@ for spars in sparsity:
                     concatenate=concatenate,
                 )
                 print("gradient database shape:")
-                print(gradient_dataframe_transposed.shape)
+                print(gradient_dataframe_transposed)
+                print("wating 10 seconds for inspection")
+                time.sleep(10)
+                
                 
                 
                 ### Identification Analysis ##################################
@@ -170,7 +174,8 @@ for spars in sparsity:
                         subject_gradient_dataframe = pd.DataFrame(grad)
                         print("target participant has not been concatenated")
                         print(subject_gradient_dataframe.shape)
-                        print("concatenate for target subject is false")
+                    
+                    print(subject_gradient_dataframe)
                     
                     ### identification #######################################
                     all_corr = gradient_dataframe_transposed.corrwith(
@@ -182,12 +187,13 @@ for spars in sparsity:
 
                     if max_index[0] == subject:
                         count1 = count1 + 1
-                        #print("subject correctly identified with correlation of")
-                        #print("r == " + str(max_value))
+                        print("subject correctly identified with correlation of")
+                        print("r == " + str(max_value))
+                        time.sleep(2)
                     else:
-                        #print("subject not correctly identified with correlaiton of")
-                        #print("r == " + str(max_value))
-
+                        print("subject not correctly identified with correlaiton of")
+                        print("r == " + str(max_value))
+                        time.sleep(2)
                     rate = count1 / len(Y_cd_transposed.columns)
 
                 ### dataframing relevant information #########################
@@ -215,6 +221,8 @@ for spars in sparsity:
                 print("Accuracy was " + str(rate))
                 print("Sparsity was " + str(spars))
                 print("count1 was " + str(count1))
+                
+                time.sleep(10)
 ## uniting dataframes
 accuracy = {
     "kernels": kernel_used,
