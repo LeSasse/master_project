@@ -1,0 +1,5 @@
+,control,spearman,pearson
+0,whole connectome,0.96,0.98
+1,max node,0.85,0.88
+2,sd node,0.67,0.67
+3,mean node,0.41,0.46

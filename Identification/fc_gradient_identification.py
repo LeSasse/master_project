@@ -13,7 +13,7 @@ sys.path.append("../imports")
 import load_data_and_functions as ldf
 
 
-print( "Starting..." )
+print("Starting...")
 
 
 ### Global Variables/User input ##############################################
@@ -35,7 +35,7 @@ atlas_size = 160
 
 
 sparsity = [0.9]
-kernels = ["pearson", "spearman", "normalized_angle", "gaussian","cosine"]
+kernels = ["pearson", "spearman", "normalized_angle", "gaussian", "cosine"]
 dimension_reductions = ["pca", "dm", "le"]
 concatenate = False
 
@@ -61,14 +61,16 @@ gradient_used = []
 sparsities = []
 iteration_count = 0
 concatenation = []
-total_iterations = len(sparsity) * len(num_grads) * len(kernels) * len(dimension_reductions)
+total_iterations = (
+    len(sparsity) * len(num_grads) * len(kernels) * len(dimension_reductions)
+)
 ##############################################################################
 
 
 ##############################################################################
 ### path and name for output data
 ### filename as follows atlasname + concatenated (or not) + identification method
-output_file = "RS1_RS2_dosenbach_" + str(concatenate) + "_" +str(id_method) + ".csv"
+output_file = "RS1_RS2_dosenbach_" + str(concatenate) + "_" + str(id_method) + ".csv"
 ##############################################################################
 
 
@@ -82,8 +84,18 @@ print("concatenate == " + str(concatenate))
 
 ##############################################################################
 ## Loading Data ##############################################################
-session1_data, session1_sub, session1_connectivity_data, session1_cd_transposed = ldf.load_data(session1_path)
-session2_data, session2_sub, session2_connectivity_data, session2_cd_transposed = ldf.load_data(session2_path)
+(
+    session1_data,
+    session1_sub,
+    session1_connectivity_data,
+    session1_cd_transposed,
+) = ldf.load_data(session1_path)
+(
+    session2_data,
+    session2_sub,
+    session2_connectivity_data,
+    session2_cd_transposed,
+) = ldf.load_data(session2_path)
 
 ## _data contains all available data
 ## _sub is subject list
@@ -95,31 +107,31 @@ session2_data, session2_sub, session2_connectivity_data, session2_cd_transposed 
 
 ##############################################################################
 ## Looping over different settings
-totaltime =datetime.timestamp( datetime.now() )
+totaltime = datetime.timestamp(datetime.now())
 for spars in sparsity:
     for n_gradients in num_grads:
         for kernel in kernels:
             for dimension_reduction in dimension_reductions:
 
-                starttime =datetime.timestamp( datetime.now() )
-                
+                starttime = datetime.timestamp(datetime.now())
+
                 ##############################################################
                 ### Gradient Construction
-                
-                
+
                 ## Reference Gradient for Alignment ##########################
-                ## In this alignment method I will align all gradients to one 
+                ## In this alignment method I will align all gradients to one
                 ## reference gradient from a reference participant.
-                reference_participant = ldf.get_conn_matrix(session1_cd_transposed.iloc[:, 0])
+                reference_participant = ldf.get_conn_matrix(
+                    session1_cd_transposed.iloc[:, 0]
+                )
                 gref = GradientMaps(
-                   n_components=n_gradients,
-                   kernel=kernel,
-                   approach=dimension_reduction,
-                   random_state=0,
-                   )
+                    n_components=n_gradients,
+                    kernel=kernel,
+                    approach=dimension_reduction,
+                    random_state=0,
+                )
                 gref.fit(reference_participant)
-                
-                
+
                 ### Session1 Gradient Construction ###########################
                 session1_gradients = ldf.create_gradient_database(
                     dataframe=session1_cd_transposed,
@@ -132,7 +144,7 @@ for spars in sparsity:
                     n_gradients=n_gradients,
                     concatenate=concatenate,
                 )
-                
+
                 ## Session2 Gradient Construction ###########################
                 session2_gradients = ldf.create_gradient_database(
                     dataframe=session2_cd_transposed,
@@ -144,17 +156,19 @@ for spars in sparsity:
                     alignment=alignment,
                     n_gradients=n_gradients,
                     concatenate=concatenate,
-                )   
-                
-                
-                ### Identification Analysis ################################## 
+                )
+
+                ### Identification Analysis ##################################
                 ## identification (default = spearman)
-                rate1 = ldf.identify(target=session2_gradients, database=session1_gradients)
-                rate2 = ldf.identify(target=session1_gradients, database=session2_gradients)
-                
+                rate1 = ldf.identify(
+                    target=session2_gradients, database=session1_gradients
+                )
+                rate2 = ldf.identify(
+                    target=session1_gradients, database=session2_gradients
+                )
+
                 rate = (rate1 + rate2) / 2
-                
-                
+
                 ### dataframing relevant information #########################
                 kernel_used.append(kernel)
                 dreduction_used.append(dimension_reduction)
@@ -163,25 +177,33 @@ for spars in sparsity:
                 iteration_count = iteration_count + 1
                 sparsities.append(spars)
                 concatenation.append(concatenate)
-                stoptime =datetime.timestamp( datetime.now() )
-                
+                stoptime = datetime.timestamp(datetime.now())
+
                 ## get output to see where loop at
                 print(str(iteration_count))
                 print(" out of " + str(total_iterations) + " iterations.")
-                print("(this round took: " + str(stoptime-starttime) + " sec )")
-                print("(     total took: " + str(stoptime-totaltime) + " sec )")
-                print("(  avg per round: " + str((stoptime-totaltime)/iteration_count) + " sec )")
-
+                print("(this round took: " + str(stoptime - starttime) + " sec )")
+                print("(     total took: " + str(stoptime - totaltime) + " sec )")
+                print(
+                    "(  avg per round: "
+                    + str((stoptime - totaltime) / iteration_count)
+                    + " sec )"
+                )
 
                 print(
-                    "Settings were " + str(kernel) + " " + str(dimension_reduction) + ", sparsity == " + str(spars) + "."
+                    "Settings were "
+                    + str(kernel)
+                    + " "
+                    + str(dimension_reduction)
+                    + ", sparsity == "
+                    + str(spars)
+                    + "."
                 )
                 print("number of Gradients: " + str(n_gradients))
                 print("       Accuracy was: " + str(rate))
                 print("       Sparsity was: " + str(spars))
 
-                
-                
+
 ## uniting dataframes
 accuracy = {
     "kernels": kernel_used,
@@ -189,7 +211,7 @@ accuracy = {
     "accuracy": rates,
     "n_gradients": ngradients,
     "sparsity": sparsities,
-    "concatenation": concatenation
+    "concatenation": concatenation,
 }
 
 df_accuracy = pd.DataFrame(accuracy)

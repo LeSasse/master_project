@@ -54,14 +54,16 @@ area_sorted = area_accuracy.sort_values(
 
 area_accuracy["labels"] = labels
 
+area_sorted = area_sorted.reset_index()
 
+"""
 best = area_accuracy[(area_accuracy["identification accuracy rate"] > 0.5)]
 worst = area_accuracy[(area_accuracy["identification accuracy rate"] < 0.08)]
 best_indices = best["brain area"]
 worst_indices = worst["brain area"]
 all_indices = best_indices.append(worst_indices).sort_values()
 
-# area_sorted = area_sorted.reset_index()
+# 
 
 dmn_area_indices = [
     0,
@@ -111,13 +113,12 @@ markers = df["identification accuracy rate"]
 
 
 ### plots
-"""
+
 ## simple line
 #plt.plot(area_accuracy["brain area"], area_accuracy["identification accuracy rate"]
 ## histogram
 bins = [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1]
 histogram = sns.displot(data=area_accuracy, x = "identification accuracy rate", bins = 10, kde= True)
-"""
 
 brain = plotting.plot_markers(
     # area_accuracy["identification accuracy rate"],
@@ -132,6 +133,7 @@ brain = plotting.plot_markers(
 )
 
 
+
 brain2 = plotting.plot_markers(
     # area_accuracy["identification accuracy rate"],
     area_accuracy["identification accuracy rate"],
@@ -144,7 +146,7 @@ brain2 = plotting.plot_markers(
     colorbar=True,
 )
 
-"""
+
 brain3 = plotting.plot_markers(
     #area_accuracy["identification accuracy rate"],
     area_accuracy["identification accuracy rate"],
@@ -157,14 +159,14 @@ brain3 = plotting.plot_markers(
     colorbar = False
 )
 
-"""
+
 
 brain.savefig("best_areas.png", dpi=500)
 brain2.savefig("yz_acc_by_area.png", dpi=500)
 # brain3.savefig("lr_acc_by_area.png", dpi = 250)
 
-
 """
+
 # brain.savefig("10_bins_sample_lr.png", dpi = 500)
 sns.set_theme(style="white")
 fig = sns.catplot(
@@ -173,65 +175,58 @@ fig = sns.catplot(
     y="identification accuracy rate",
     color="lightskyblue",
     kind="bar",
-    legend_out=True
+    legend_out=True,
 )
 
 fig.set_xticklabels([])
 
-fig.map(plt.axhline, y=0.96, c="gold", label= "whole connectome")# whole connectome
-plt.text(60,0.97,'whole connectome')
+fig.map(plt.axhline, y=0.96, c="gold", label="whole connectome")  # whole connectome
+plt.text(60, 0.97, "whole connectome")
 
-fig.map(plt.axhline, y=0.86, c="aqua", label="take max from each node")
-plt.text(60,0.87,'max from each node')
+fig.map(
+    plt.axhline, y=0.86, xmin=0, xmax=0.49, c="aqua", label="take max from each node"
+)
+plt.text(10, 0.87, "max from each ROI")
 
-fig.map(plt.axhline, y=0.67, c="cadetblue", label="take sd from each node")#standard deviation from each node
-plt.text(60,0.68,'sd from each node')
+fig.map(
+    plt.axhline,
+    y=0.67,
+    xmin=0,
+    xmax=0.49,
+    c="cadetblue",
+    label="take sd from each node",
+)  # standard deviation from each node
+plt.text(10, 0.68, "sd from each ROI")
 
-fig.map(plt.axhline, y=0.61, c="red", label="max gradients")
-plt.text(60,0.62,'max gradients')
+fig.map(plt.axhline, xmin=0.51, xmax=1, y=0.87, c="red", label="max gradients")
+plt.text(90, 0.88, "max gradients **")
 
-fig.map(plt.axhline, y=0.41, c="blue", label="take mean from each node")
-plt.text(60,0.42,'taking mean from each node')
+fig.map(
+    plt.axhline, y=0.41, xmin=0, xmax=0.49, c="blue", label="take mean from each node"
+)
+plt.text(10, 0.42, "mean from each ROI")
 
-fig.map(plt.axhline, y=0.38, c="firebrick", label="mean gradients") 
-plt.text(70,0.35,'mean accuracy gradients')
+fig.map(plt.axhline, y=0.69, xmin=0.51, xmax=1, c="firebrick", label="mean gradients")
+plt.text(90, 0.7, "mean gradients **")
 
-fig.map(plt.axhline, y=0.32, c="tomato", label="min gradients")  
-plt.text(70,0.29,'minimum accuracy for gradients')
-
-
-
-
+fig.map(plt.axhline, y=0.41, xmin=0.51, xmax=1, c="tomato", label="min gradients")
+plt.text(90, 0.42, "min for gradients **")
 
 
-
-fig.set_xlabels("ROI")
+fig.set_xlabels("ROI-wise connectivity")
 fig.set_ylabels("identification accuracy")
 
-#plt.legend(bbox_to_anchor=(1.7, 1), loc='upper right')
-
-
-
-
-
-
-
-
+# plt.legend(bbox_to_anchor=(1.7, 1), loc='upper right')
 
 
 # histogram.savefig("10bin_hist.png", dpi = 500)
 fig.savefig("control.png", dpi=500)
 
-control = ["whole connectome", "max node", "sd node" , "mean node"]
+control = ["whole connectome", "max node", "sd node", "mean node"]
 spearman = [0.96, 0.85, 0.67, 0.41]
 pearson = [0.98, 0.88, 0.67, 0.46]
 
 
-controls = {
-    "control": control,
-    "spearman": spearman,
-    "pearson": pearson
-}
+controls = {"control": control, "spearman": spearman, "pearson": pearson}
 
 pd.DataFrame(controls).to_csv("controls.csv")
-"""
