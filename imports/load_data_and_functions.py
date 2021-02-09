@@ -21,6 +21,7 @@ from scipy.io import loadmat
 import pandas as pd
 import numpy as np
 import math
+import brainspace
 from brainspace.gradient import GradientMaps
 
 
@@ -94,6 +95,14 @@ def create_gradient_database(
                 database_gm.fit(subject_matrix, sparsity=sparsity)
                 gradient_array_database[index] = database_gm.gradients_[:, 0]
             else:
+                
+                ###############################################################
+                ## for local alignment ########################################
+                ##database_gm.fit(subject_matrix)
+                ##current_grad = database_gm.gradients_[:,0].reshape((160,1))
+                ##aligned = brainspace.gradient.alignment.procrustes(current_grad, reference)
+                ##gradient_array_database[index] = aligned.reshape((160,))
+                
                 database_gm.fit(subject_matrix, reference=reference, sparsity=sparsity)
                 gradient_array_database[index] = database_gm.aligned_[:, 0]
 
@@ -118,10 +127,10 @@ def create_gradient_database(
             )
             if np.all(reference == None):
                 database_gm.fit(subject_matrix, sparsity=sparsity)
-                gradient_array_database[index] = database_gm.gradients_[:,0]
+                #gradient_array_database[index] = database_gm.gradients_[:,index]
             else:
                 database_gm.fit(subject_matrix, reference=reference, sparsity=sparsity)
-                gradient_array_database[index] = database_gm.aligned_[:,0]
+                #gradient_array_database[index] = database_gm.aligned_[:,0]
 
             grad = [None] * n_gradients
             for i in range(n_gradients):
@@ -132,7 +141,7 @@ def create_gradient_database(
                 else:
                     # norm_array = np.linalg.norm(database_gm.gradients_[:,i])
                     # normalised = database_gm.gradients_[:,i]/norm_array
-                    grad[i] = database_gm.aligned_s[:, i]  # normalised
+                    grad[i] = database_gm.aligned_[:, i]  # normalised
 
                 grad = np.array(grad, dtype=object)
             grad_stacked = np.hstack(grad)
@@ -143,3 +152,37 @@ def create_gradient_database(
         gradient_dataframe_transposed = gradient_dataframe.T
         gradient_dataframe_transposed.columns = list(subjects)
         return gradient_dataframe_transposed
+    
+    
+def identify(target, database, id_method = "spearman"):
+    '''
+
+    Parameters
+    ----------
+    target : pandas dataframe
+        holds all subject gradients from session that is to be identified.
+        each column should correspond to one subject
+    database : pandas dataframe
+        holds all subject gradients from session from which to identify
+        each column should correspond to one subject
+    id_method : correlation method to use for identification. Default is 
+    spearman
+    Returns
+    -------
+    identification accuracy
+
+    '''
+    count = 0  # the count variable keeps track of iterations with
+                            # accurate identification
+    for index, subject in enumerate(target.columns):
+        all_corr = database.corrwith(
+            target.iloc[:, index], method=id_method
+        )
+                    
+        max_value = max(all_corr)
+        max_index = all_corr.index[all_corr == max_value]
+
+        if max_index[0] == subject:
+            count = count + 1
+            
+    return count / len(target.columns)
