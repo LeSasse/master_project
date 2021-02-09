@@ -35,8 +35,8 @@ atlas_size = 160
 
 
 sparsity = [0.9]
-kernels = ["pearson"]#, "spearman", "normalized_angle", "gaussian","cosine"]
-dimension_reductions = ["pca"]#, "dm", "le"]
+kernels = ["pearson", "spearman", "normalized_angle", "gaussian","cosine"]
+dimension_reductions = ["pca", "dm", "le"]
 concatenate = False
 
 ## Identification method (spearman or pearson)
