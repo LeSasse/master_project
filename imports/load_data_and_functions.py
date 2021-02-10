@@ -171,17 +171,37 @@ def create_gradient_database(
         for index, subject in enumerate(subjects):
             subject_matrix = get_conn_matrix(dataframe[subject])
 
-            database_gm = GradientMaps(
-                n_components=n_gradients,
-                kernel=kernel,
-                approach=dimension_reduction,
-                random_state=0,
-                alignment=alignment,
-            )
+            
+            
             if np.all(reference == None):
+                database_gm = GradientMaps(
+                    n_components=n_gradients,
+                    kernel=kernel,
+                    approach=dimension_reduction,
+                    random_state=0,
+                    
+                )
                 database_gm.fit(subject_matrix, sparsity=sparsity)
-            else:
+            elif global_alignment == True:
+                database_gm = GradientMaps(
+                    n_components=10,
+                    kernel=kernel,
+                    approach=dimension_reduction,
+                    random_state=0,
+                    alignment=alignment
+                )
                 database_gm.fit(subject_matrix, reference=reference, sparsity=sparsity)
+            elif global_alignment == False:
+                database_gm = GradientMaps(
+                    n_components=n_gradients,
+                    kernel=kernel,
+                    approach=dimension_reduction,
+                    random_state=0,
+                    alignment=alignment
+                )
+                database_gm.fit(subject_matrix)
+    
+                    
 
             grad = [None] * n_gradients
             for i in range(n_gradients):
@@ -189,10 +209,17 @@ def create_gradient_database(
                     # norm_array = np.linalg.norm(database_gm.aligned[:,i])
                     # normalised = database_gm.aligned_[:,i]/norm_array
                     grad[i] = database_gm.gradients_[:, i]  # normalised
-                else:
+                elif global_alignment == True:
                     # norm_array = np.linalg.norm(database_gm.gradients_[:,i])
                     # normalised = database_gm.gradients_[:,i]/norm_array
                     grad[i] = database_gm.aligned_[:, i]  # normalised
+                elif global_alignment == False:
+                    reference_gradient = reference[:,i].reshape((atlas_size, 1))
+                    to_align = database_gm.gradients_[:,i].reshape((atlas_size, 1))
+                    after_alignment = brainspace.gradient.alignment.procrustes(to_align, reference_gradient)
+                    after_alignment = after_alignment.reshape((160,))
+                    
+                    grad[i] = after_alignment
 
                 grad = np.array(grad, dtype=object)
             grad_stacked = np.hstack(grad)

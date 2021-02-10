@@ -83,6 +83,7 @@ for area in range(atlas_size):
     areas.append(area)
     rates.append(rate)
     stoptime = datetime.timestamp(datetime.now())
+    print(str(iteration_count))
     print(" out of " + str(total_iterations) + " iterations.")
     print("(this round took: " + str(stoptime - starttime) + " sec )")
     print("(     total took: " + str(stoptime - totaltime) + " sec )")
@@ -94,6 +95,6 @@ accuracy = {"areas": areas, "rates": rates}
 df_accuracy = pd.DataFrame(accuracy)
 
 df_accuracy.to_csv(
-    "/home/leonard/projects/master_project_files/output_datafiles/accuracy_by_area_spearman.csv",
+    "accuracy_by_area_spearman_FIXED.csv",
     index=False,
 )

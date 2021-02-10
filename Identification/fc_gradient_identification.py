@@ -37,7 +37,12 @@ atlas_size = 160
 sparsity = [0.9]
 kernels = ["pearson", "spearman", "normalized_angle", "gaussian", "cosine"]
 dimension_reductions = ["pca", "dm", "le"]
-concatenate = False
+concatenate = True
+global_alignment = True
+## if concatente == True and global alignment == True, reference gradient must have
+## 50 components (rather than n_gradients components) and values in num_grads cannot
+## be more than 50
+
 
 ## Identification method (spearman or pearson)
 id_method = "spearman"
@@ -70,7 +75,7 @@ total_iterations = (
 ##############################################################################
 ### path and name for output data
 ### filename as follows atlasname + concatenated (or not) + identification method
-output_file = "RS1_RS2_dosenbach_" + str(concatenate) + "_" + str(id_method) + ".csv"
+output_file = "RS1_RS2_dosenbach_participant_ref_concatenation:" + str(concatenate) + "_global_alignment:" + str(global_alignment) + "_" + str(id_method) + ".csv"
 ##############################################################################
 
 
@@ -80,6 +85,7 @@ print("total iterations == " + str(total_iterations))
 print("atlas size == " + str(atlas_size))
 print("number of gradients to iterate " + str(num_grads))
 print("concatenate == " + str(concatenate))
+print("global_alignment == " + str(global_alignment))
 
 
 ##############################################################################
@@ -104,6 +110,7 @@ print("concatenate == " + str(concatenate))
 ## the transpose is necessary to use pandas.corrwith() method for identification
 ##############################################################################
 
+#avg_connectivity = session1_cd_transposed.mean(axis=1)
 
 ##############################################################################
 ## Looping over different settings
@@ -121,11 +128,14 @@ for spars in sparsity:
                 ## Reference Gradient for Alignment ##########################
                 ## In this alignment method I will align all gradients to one
                 ## reference gradient from a reference participant.
+                
                 reference_participant = ldf.get_conn_matrix(
                     session1_cd_transposed.iloc[:, 0]
                 )
+                
+                
                 gref = GradientMaps(
-                    n_components=n_gradients,
+                    n_components=10,###n_gradients,
                     kernel=kernel,
                     approach=dimension_reduction,
                     random_state=0,
@@ -143,6 +153,7 @@ for spars in sparsity:
                     alignment=alignment,
                     n_gradients=n_gradients,
                     concatenate=concatenate,
+                    global_alignment=global_alignment
                 )
 
                 ## Session2 Gradient Construction ###########################
@@ -156,6 +167,7 @@ for spars in sparsity:
                     alignment=alignment,
                     n_gradients=n_gradients,
                     concatenate=concatenate,
+                    global_alignment=global_alignment
                 )
 
                 ### Identification Analysis ##################################
