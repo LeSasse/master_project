@@ -35,10 +35,10 @@ atlas_size = 160
 
 
 sparsity = [0.9]
-kernels = ["pearson", "spearman", "normalized_angle", "gaussian", "cosine"]
-dimension_reductions = ["pca", "dm", "le"]
+kernels = ["gaussian"]
+dimension_reductions = ["le"]
 concatenate = True
-global_alignment = True
+global_alignment = False
 ## if concatente == True and global alignment == True, reference gradient must have
 ## 50 components (rather than n_gradients components) and values in num_grads cannot
 ## be more than 50
@@ -51,7 +51,7 @@ id_method = "spearman"
 ## concatenated, if concatenation = false then principal gradient will still be chosen
 ## and only n_components argument goes up
 ## num_grads = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25]
-num_grads = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+num_grads = [3]
 ##############################################################################
 
 
@@ -135,7 +135,7 @@ for spars in sparsity:
                 
                 
                 gref = GradientMaps(
-                    n_components=10,###n_gradients,
+                    n_components=n_gradients,
                     kernel=kernel,
                     approach=dimension_reduction,
                     random_state=0,
