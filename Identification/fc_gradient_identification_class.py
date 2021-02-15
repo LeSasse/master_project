@@ -16,14 +16,15 @@ Gradiator = gradient()
 ##############################################################################
 ### customise gradient settings ##############################################
 ##############################################################################
-Gradiator.set_kernels( ["pearson", "spearman", "normalized_angle", "gaussian","cosine"] )
+Gradiator.set_kernels( ["pearson"] )#, "spearman", "normalized_angle", "gaussian","cosine"] )
 
 Gradiator.set_alignment( "procrustes" )
+Gradiator.set_global_alignment(True, 10)
 Gradiator.set_atlas_size( 160)
 Gradiator.set_sparsity( [0.9] )
-Gradiator.set_dimension_reductions( ["pca", "dm", "le"] )
+Gradiator.set_dimension_reductions( ["pca"] ) #, "dm", "le"] )
 
-Gradiator.set_concatenate(False)
+Gradiator.set_concatenate(True)
 
 # We want some output
 Gradiator.set_verbose(True)
@@ -31,7 +32,7 @@ Gradiator.set_debug(False)
 
 ## Identification method (spearman or pearson)
 Gradiator.set_id_method("spearman")
-Gradiator.set_num_grads( range(1,11) )
+Gradiator.set_num_grads( range(1,5) )
 
 
 

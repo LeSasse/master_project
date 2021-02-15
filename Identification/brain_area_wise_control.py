@@ -26,9 +26,7 @@ session2_path = (
     "../../dotmat_data/hcp_conn_unrelated_FULLHCP2LRFIX_dos160_roi_atlas_2x2x2.mat"
 )
 
-kernel = "pearson"
-dimension_reduction = "dm"
-alignment = "procrustes"
+
 atlas_size = 160
 
 ## Loading Data ##############################################################
@@ -90,11 +88,12 @@ for area in range(atlas_size):
     print(
         "(  avg per round: " + str((stoptime - totaltime) / iteration_count) + " sec )"
     )
+    print("accuracy was: " + str(rate))
 
 accuracy = {"areas": areas, "rates": rates}
 df_accuracy = pd.DataFrame(accuracy)
 
 df_accuracy.to_csv(
-    "accuracy_by_area_spearman_FIXED.csv",
+    "accuracy_by_area_spearman_FIXED_AGAIN.csv",
     index=False,
 )

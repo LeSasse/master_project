@@ -25,13 +25,16 @@ class gradient:
         # Default concurrency
         self.concurrency = self.get_cpus()
 
-
     def set_kernels(self,kernels):
         self.kernels = kernels
 
     def set_alignment(self,alignment):
         self.alignment = alignment
-
+    
+    def set_global_alignment(self, global_alignment, extractions):
+        self.global_alignment = global_alignment
+        self.extractions = extractions
+    
     def set_atlas_size(self,atlas_size):
         self.atlas_size = atlas_size
 
@@ -259,13 +262,22 @@ class gradient:
         ## In this alignment method I will align all gradients to one
         ## reference gradient from a reference participant.
         reference_participant = ldf.get_conn_matrix(self.session[0]['cd_transposed'].iloc[:, 0])
-        gref = GradientMaps(
-            n_components    = n_gradients,
-            kernel          = kernel,
-            approach        = dimension_reduction,
-            random_state    = 0,
-        )
-
+        if self.concatenate:
+            if self.global_alignment:
+                gref = GradientMaps(
+                    n_components    = self.extractions,
+                    kernel          = kernel,
+                    approach        = dimension_reduction,
+                    random_state    = 0,
+                )
+        else:
+            gref = GradientMaps(
+                    n_components    = n_gradients,
+                    kernel          = kernel,
+                    approach        = dimension_reduction,
+                    random_state    = 0,
+                )
+            
         if (self.debug):
             print(" -Gradient_maps: {:10.3f} s".format( time.time() - starttime ) )
         gref.fit(reference_participant)
@@ -286,6 +298,8 @@ class gradient:
                     alignment           =self.alignment,
                     n_gradients         =n_gradients,
                     concatenate         =self.concatenate,
+                    global_alignment    =self.global_alignment,
+                    extractions         =self.extractions
                 )
             )
 

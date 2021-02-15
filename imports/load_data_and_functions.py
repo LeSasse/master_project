@@ -22,14 +22,16 @@ import numpy as np
 import math
 import brainspace
 from brainspace.gradient import GradientMaps
+from sklearn.neighbors import NearestNeighbors
+from scipy.stats import spearmanr
 
 
 def load_data(data_path):
     """
     Parameters
     ----------
-    data_path : TYPE
-        DESCRIPTION.
+    data_path : String
+        path to data.
 
     Returns
     -------
@@ -92,6 +94,7 @@ def create_gradient_database(
     n_gradients=1,
     concatenate=False,
     global_alignment=True,
+    extractions=None
 ):
     """
     Parameters
@@ -184,7 +187,7 @@ def create_gradient_database(
                 database_gm.fit(subject_matrix, sparsity=sparsity)
             elif global_alignment == True:
                 database_gm = GradientMaps(
-                    n_components=10,
+                    n_components=extractions,
                     kernel=kernel,
                     approach=dimension_reduction,
                     random_state=0,
@@ -250,20 +253,38 @@ def identify(target, database, id_method="spearman"):
     identification accuracy
 
     """
-    count = 0  # the count variable keeps track of iterations with
-    # accurate identification
+    
+    for col in target.columns:
+        if col not in database.columns:
+            target.drop([col], axis = 1, inplace=True)
+    
+    for col in database.columns:
+        if col not in target.columns:
+            database.drop([col], axis = 1, inplace=True)
+   
+    count = 0   # the count variable keeps track of iterations with
+                # accurate identification
     for index, subject in enumerate(target.columns):
         all_corr = database.corrwith(target.iloc[:, index], method=id_method)
-
+        
         max_value = max(all_corr)
         max_index = all_corr.index[all_corr == max_value]
-
+        
+        
         if max_index[0] == subject:
             count = count + 1
 
     return count / len(target.columns)
+    
 
+    
+    #N = target.shape[0]
+    #D = target.shape[1]
 
+    #nbrs = NearestNeighbors(n_neighbors=1, metric='correlation').fit(target.T)
+    #distances, indices = nbrs.kneighbors(database.T)
+    #return np.mean(indices.T == np.array(list(range(D))))
+    
 def create_control_data(connectivity_data, kind, atlas_size, roi=0):
     """
 
