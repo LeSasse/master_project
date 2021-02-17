@@ -24,7 +24,10 @@ import brainspace
 from brainspace.gradient import GradientMaps
 from sklearn.neighbors import NearestNeighbors
 from scipy.stats import spearmanr
-
+import os
+os.environ['OPENBLAS_NUM_THREADS'] = '1'
+import mkl
+mkl.set_num_threads(1)
 
 def load_data(data_path):
     """
@@ -262,6 +265,7 @@ def identify(target, database, id_method="spearman"):
         if col not in target.columns:
             database.drop([col], axis = 1, inplace=True)
    
+    '''
     count = 0   # the count variable keeps track of iterations with
                 # accurate identification
     for index, subject in enumerate(target.columns):
@@ -275,15 +279,19 @@ def identify(target, database, id_method="spearman"):
             count = count + 1
 
     return count / len(target.columns)
-    
+    '''
 
     
-    #N = target.shape[0]
-    #D = target.shape[1]
-
-    #nbrs = NearestNeighbors(n_neighbors=1, metric='correlation').fit(target.T)
-    #distances, indices = nbrs.kneighbors(database.T)
-    #return np.mean(indices.T == np.array(list(range(D))))
+    N = target.shape[0]
+    D = target.shape[1]
+    
+    target_ranked = target.T.rank()
+    database_ranked = database.T.rank()
+    
+    nbrs = NearestNeighbors(n_neighbors=1, metric='correlation', n_jobs= 1).fit(target_ranked)
+    distances, indices = nbrs.kneighbors(database_ranked)
+    return np.mean(indices.T == np.array(list(range(D))))
+    
     
 def create_control_data(connectivity_data, kind, atlas_size, roi=0):
     """
@@ -320,6 +328,8 @@ def create_control_data(connectivity_data, kind, atlas_size, roi=0):
             sub_val = subject_matrix.std(axis=1)
         elif kind == "max":
             sub_val = subject_matrix.max(axis=1)
+        elif kind == "sum":
+            sub_val = subject_matrix.sum(axis=1)
         elif kind == "ROI":
             sub_val = subject_matrix[roi]
 
