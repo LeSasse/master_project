@@ -85,7 +85,7 @@ class gradient:
         self.output_file_template = output_file_template
 
     def output_file(self):
-        return  str(self.output_file_template.format(self.concatenate, self.id_method))
+        return  str(self.output_file_template.format(self.concatenate, self.id_method, self.global_alignment))
 
     def store_result(self):
         df_accuracy = pd.DataFrame(self.accuracy)
@@ -262,14 +262,13 @@ class gradient:
         ## In this alignment method I will align all gradients to one
         ## reference gradient from a reference participant.
         reference_participant = ldf.get_conn_matrix(self.session[0]['cd_transposed'].iloc[:, 0])
-        if self.concatenate:
-            if self.global_alignment:
-                gref = GradientMaps(
-                    n_components    = self.extractions,
-                    kernel          = kernel,
-                    approach        = dimension_reduction,
-                    random_state    = 0,
-                )
+        if self.concatenate and self.global_alignment:
+            gref = GradientMaps(
+                n_components    = self.extractions,
+                kernel          = kernel,
+                approach        = dimension_reduction,
+                random_state    = 0,
+            )
         else:
             gref = GradientMaps(
                     n_components    = n_gradients,
