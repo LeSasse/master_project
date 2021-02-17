@@ -158,6 +158,7 @@ def create_gradient_database(
             elif global_alignment == False:
                 ###############################################################
                 ## for local alignment ########################################
+                reference=reference[:,0].reshape((160,1))
                 database_gm.fit(subject_matrix)
                 current_grad = database_gm.gradients_[:, 0].reshape((160, 1))
                 aligned = brainspace.gradient.alignment.procrustes(
@@ -254,8 +255,8 @@ def identify(target, database, id_method="spearman"):
     Returns
     -------
     identification accuracy
-
     """
+    
     
     for col in target.columns:
         if col not in database.columns:
@@ -265,6 +266,7 @@ def identify(target, database, id_method="spearman"):
         if col not in target.columns:
             database.drop([col], axis = 1, inplace=True)
    
+    
     '''
     count = 0   # the count variable keeps track of iterations with
                 # accurate identification
@@ -285,8 +287,8 @@ def identify(target, database, id_method="spearman"):
     N = target.shape[0]
     D = target.shape[1]
     
-    target_ranked = target.T.rank()
-    database_ranked = database.T.rank()
+    target_ranked = target.rank().T
+    database_ranked = database.rank().T
     
     nbrs = NearestNeighbors(n_neighbors=1, metric='correlation', n_jobs= 1).fit(target_ranked)
     distances, indices = nbrs.kneighbors(database_ranked)
