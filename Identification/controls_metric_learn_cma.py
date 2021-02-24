@@ -58,7 +58,7 @@ session2_path = (
 ##############################################################################
 
 
-RUNS = 2
+RUNS = 50
 MIN, MAX = -1.0, 1.0
 MAXFEVALS = 500
 TRAINPROP = 0.5
@@ -79,6 +79,17 @@ for col in session2_cd_transposed.columns:
 control1 = ldf.create_control_data(session1_cd_transposed, kind="sum", atlas_size=160)
 control2 = ldf.create_control_data(session2_cd_transposed, kind="sum", atlas_size=160)
 
+'''
+if random data is needed for testing
+uncomment the next block
+
+'''
+#print('generating random data')
+#control1 = pd.DataFrame(np.random.randn(100, 5)).T
+#control2 = control1 + np.random.normal(0,1,[100, 5]).T
+
+
+
 control1_T = control1.T
 control2_T = control2.T
 
@@ -97,20 +108,6 @@ cmaopts = cma.CMAOptions()
 cmaopts.set('bounds', [[MIN]*n, [MAX]*n])
 cmaopts.set('maxfevals', MAXFEVALS)
 
-
-
-# from: https://stackoverflow.com/questions/38641691/weighted-correlation-coefficient-with-pandas
-def mw(x, w):
-    """Weighted Mean"""
-    return np.sum(x * w) / np.sum(w)
-
-def covw(x, y, w):
-    """Weighted Covariance"""
-    return np.sum(w * (x - mw(x, w)) * (y - mw(y, w))) / np.sum(w)
-
-def corrw(x, y, w):
-    """Weighted Correlation"""
-    return covw(x, y, w) / np.sqrt(covw(x, x, w) * covw(y, y, w))
 
 def eval_id(w, data1, data2):
     ''' Evaluate weighted Identification ''' 
@@ -143,44 +140,6 @@ def eval_id(w, data1, data2):
     
     return obj
 
-
-def objectiveFUN(w, data1, data2):
-    
-    data1= data1.reset_index(drop=True)
-    data2= data2.reset_index(drop=True)
-    data1= data1.rank()
-    data2= data2.rank()
-    w = np.array(w)
-    
-    ## initialise ##
-    crrsii = np.array([])
-    crrsij = np.array([]) 
-    
-    for index, row in data1.iterrows():
-        crrmax = -np.inf
-        mycrrs = np.array([])
-        
-        x1 = row.to_numpy()
-        y1 = data2.iloc[index].to_numpy()
-        for index2, row2 in data2.iterrows():
-            y2 = row2.to_numpy()
-            x2 = data1.iloc[index2].to_numpy()
-            if index == index2:
-                crrself = corrw(x1, y1, w)
-                crrsii = np.append(crrsii, crrself)
-            else:
-                mycrrs = np.append(mycrrs, corrw(x1, x2, w))
-                mycrrs = np.append(mycrrs, corrw(x1, y2, w))
-                mycrrs = np.append(mycrrs, corrw(y1, x2, w))
-                mycrrs = np.append(mycrrs, corrw(y1, y2, w))
-                crrsij = np.append(crrsij, mycrrs)
-                crr = np.max(mycrrs)
-                
-                if crr > crrmax:
-                    crrmax = crr
-                    
-    obj = -(np.mean(crrsii) - np.mean(crrsij))
-    return obj
 
 def objective_fun(w, data1, data2):
    data1 = data1.T
@@ -250,8 +209,11 @@ print("Initial Settings")
 print("-----------------------------------------------------------")
 print("Identification without weights:            {}.".format(round(rate,4)))
 print("Identification with starting weights:      {}.".format(round(defaccuracy,4)))
+print("MAXFEVALS                                  {}.".format(MAXFEVALS))
+print("MIN, MAX                                   {}, {}.".format(MIN, MAX))
+print("RUNS                                       {}.".format(RUNS))
+print("TRAINPROP                                  {}.".format(TRAINPROP))
 #print("idiff with starting weights:               {}.".format(round(defidiff,4)))
-
 print("-----------------------------------------------------------")
 print("Datasets:")
 print(control1_T)
@@ -270,6 +232,7 @@ totaltime = datetime.timestamp(datetime.now())
 for run in range(RUNS):
     starttime = datetime.timestamp(datetime.now())
     print("starting run " + str(run))
+    print("-----------------------------------------------------------")
     
     ### train-test split
     trainidx = np.random.rand(len(control1_T)) < TRAINPROP
@@ -310,13 +273,11 @@ for run in range(RUNS):
     ## wrap up run
     stoptime = datetime.timestamp(datetime.now())
     runtime = stoptime-starttime
-    avg_runtime = totaltime / run
-    time_left = totaltime - (avg_runtime * RUNS)
-    print("finished run")
+    avg_runtime = (stoptime - totaltime) / (run+1)
+    time_left = (stoptime - totaltime) - (avg_runtime * RUNS)
     
     ### output for this run
-    print("Run: " + str(run) + " out of " + str(RUNS))
-    print("Results")
+    print("Run: " + str(run) + " out of " + str(RUNS) + " RESULTS")
     print("-----------------------------------------------------------")
     print("idiff training data:            {}.".format(trainmar))
     print("idiff test data:                {}.".format(testmar))
@@ -324,11 +285,14 @@ for run in range(RUNS):
     print("-----------------------------------------------------------")
     print("Run Timestamp (in seconds)")
     print("-----------------------------------------------------------")
-    print("Time for this run:              {}.".format(runtime))
-    print("Avg run time:                   {}.".format(avg_runtime))
-    print("Total time so far:              {}.".format(totaltime))
-    print("Time left                       {}.".format(time_left))
+    print("Time for this run:              {} seconds.".format(round(runtime, 4)))
+    print("Avg run time:                   {} seconds.".format(round(avg_runtime,4)))
+    print("Total time so far:              {} seconds.".format(round((stoptime - totaltime),4)))
+    print("Estimated Time left             {} seconds.".format(round(time_left, 4)))
     print("-----------------------------------------------------------")
+    print("-----------------------------------------------------------")
+    print("-----------------------------------------------------------")
+    print("-----------------------END RUN-----------------------------")
     
 
 results['bestmean'] = np.mean(bests, 0)
