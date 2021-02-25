@@ -59,8 +59,9 @@ session2_path = (
 
 
 RUNS = 50
-MIN, MAX = -1.0, 1.0
-MAXFEVALS = 500
+
+MIN, MAX = -1, 1
+MAXFEVALS = 20000
 TRAINPROP = 0.5
 SAVE = True
 
@@ -76,8 +77,10 @@ for col in session2_cd_transposed.columns:
 
 
 ### summing data ... ##########################################
-control1 = ldf.create_control_data(session1_cd_transposed, kind="sum", atlas_size=160)
-control2 = ldf.create_control_data(session2_cd_transposed, kind="sum", atlas_size=160)
+control1 = ldf.create_control_data(session1_cd_transposed, kind="sum", atlas_size=160).T
+control2 = ldf.create_control_data(session2_cd_transposed, kind="sum", atlas_size=160).T
+
+
 
 '''
 if random data is needed for testing
@@ -85,21 +88,17 @@ uncomment the next block
 
 '''
 #print('generating random data')
-#control1 = pd.DataFrame(np.random.randn(100, 5)).T
-#control2 = control1 + np.random.normal(0,1,[100, 5]).T
+#control1 = pd.DataFrame(np.random.randn(398, 5)).T
+#control2 = control1 + np.random.normal(0,1,[398, 5]).T
 
 
-
-control1_T = control1.T
-control2_T = control2.T
-
-n = control1.shape[0]   #398
-d = control1.shape[1]   #160
+d = control1.shape[0]   #398
+n = control1.shape[1]   #160
 
 
 ### Identification without weights
-rate1 = ldf.identify(control1, control2)
-rate2 = ldf.identify(control2, control1)
+rate1 = ldf.identify(control1.T, control2.T)
+rate2 = ldf.identify(control2.T, control1.T)
 rate = (rate1 + rate2) / 2
 
 
@@ -111,6 +110,9 @@ cmaopts.set('maxfevals', MAXFEVALS)
 
 def eval_id(w, data1, data2):
     ''' Evaluate weighted Identification ''' 
+    data1 = data1.T
+    data2 = data2.T
+    
     A = np.array(data1)
     B = np.array(data2)
     w = np.array(w)
@@ -136,71 +138,58 @@ def eval_id(w, data1, data2):
     distances, indices = nbrs.kneighbors(data1_ranked)
     rate2 = np.mean(indices.T == np.array(list(range(D))))
     
-    obj = (rate1 + rate2)/2
+    obj = -(rate1 + rate2)/2
     
     return obj
 
 
-def objective_fun(w, data1, data2):
-   data1 = data1.T
-   data2 = data2.T
-   w = np.array(w)
-   A = np.array(data1)
-   B = np.array(data2)
-    
-   ## weighting columns
-   Aw = (A.T * w).T
-   Bw = (B.T * w).T
-   #return pd.DataFrame(Aw)
-    
-   data1 = pd.DataFrame(Aw)
-   data2 = pd.DataFrame(Bw)
-   N = data1.shape[0]
-   D = data1.shape[1]
-   
-   data1_ranked = data1.T.rank()
-   data2_ranked = data2.T.rank()
-   w = np.array(w)
-   
-   crrsii = np.array([])
-   crrsij = np.array([])
-   
-   for index, row in data1_ranked.iterrows():
-       crrmax = -np.inf
-       mycrrs = np.array([])
-       x1 = row.to_numpy()
-       y1 = data2_ranked.iloc[index].to_numpy()
-       for index2, row2 in data2.iterrows():
-           y2 = row2.to_numpy()
-           x2 = data1_ranked.iloc[index2].to_numpy()
-           
-           if index == index2:
-               crrself = np.correlate(x1, y1)
-               crrsii = np.append(crrsii, crrself)
-               
-           else:
-               mycrrs = np.append(mycrrs, np.correlate(x1, x2))
-               mycrrs = np.append(mycrrs, np.correlate(x1, y2))
-               mycrrs = np.append(mycrrs, np.correlate(y1, x2))
-               mycrrs = np.append(mycrrs, np.correlate(y1, y2))
-               crrsij = np.append(crrsij, mycrrs)
-               crr = np.max(mycrrs)
-               
-               if crr > crrmax:
-                   crrmax = crr
-                   
-   obj = -(np.mean(crrsii) - np.mean(crrsij)) 
-                   
-   return obj
+### get the idiff correlation matrix
+def corr(df1, df2):    
+    n = len(df1)
+    #df1 = df1.rank()
+    #df2 = df2.rank()
+    v1, v2 = df1.values, df2.values
+    sums = np.multiply.outer(v2.sum(0), v1.sum(0))
+    stds = np.multiply.outer(v2.std(0), v1.std(0))
+    return pd.DataFrame((v2.T.dot(v1) - sums / n) / stds / n,
+                        df2.columns, df1.columns)
 
 
-### generating some random weights
-weights = [1.0/n]*n
+
+def objective_fun(w, df1, df2):
+    df1, df2 = df1.T, df2.T
+
+    df1, df2 = df1.rank(), df2.rank()
+    
+    A, B, w = np.array(df1), np.array(df2), np.array(w)
+    
+    ## weighting columns
+    Aw, Bw = (A.T * w).T, (B.T * w).T
+    
+    df1, df2 = pd.DataFrame(Aw), pd.DataFrame(Bw)
+    
+    idiff_matrix = corr(df1, df2)
+    idiff_matrix = np.array(idiff_matrix)
+    
+    ## corr_self
+    diag = np.diagonal(idiff_matrix)
+    
+    ## corr_others
+    mask = np.ones(idiff_matrix.shape, dtype=bool)
+    np.fill_diagonal(mask, 0)
+    off_diag = idiff_matrix[mask]
+
+    obj = -(np.mean(diag) - np.mean(off_diag))
+    
+    return obj
+
+
+
+### generating some weights
+weights = [-1 + 1.0/n]*n
 #defidiff = objectiveFUN(weights, control1_T, control2_T)
 defaccuracy = eval_id(weights, control1, control2)
-
-
-#weights += np.random.uniform(0.0, 0.1/n, n )
+defidiff = objective_fun(weights, control1, control2)
 
 
 
@@ -209,15 +198,19 @@ print("Initial Settings")
 print("-----------------------------------------------------------")
 print("Identification without weights:            {}.".format(round(rate,4)))
 print("Identification with starting weights:      {}.".format(round(defaccuracy,4)))
+print("Initial Idiff                              {}.".format(round(defidiff,4)))
 print("MAXFEVALS                                  {}.".format(MAXFEVALS))
 print("MIN, MAX                                   {}, {}.".format(MIN, MAX))
 print("RUNS                                       {}.".format(RUNS))
 print("TRAINPROP                                  {}.".format(TRAINPROP))
 #print("idiff with starting weights:               {}.".format(round(defidiff,4)))
 print("-----------------------------------------------------------")
-print("Datasets:")
-print(control1_T)
-print(control2_T)
+print("\n Datasets:")
+print(control1)
+print(control2)
+
+print("\n initial weights \n " + str(weights) )
+
 
 
 results = {}
@@ -235,53 +228,55 @@ for run in range(RUNS):
     print("-----------------------------------------------------------")
     
     ### train-test split
-    trainidx = np.random.rand(len(control1_T)) < TRAINPROP
-    train = control1_T[trainidx]
+    trainidx = np.random.rand(len(control1)) < TRAINPROP
+    train = control1[trainidx]
     train = train.reset_index(drop=True)
-    test = control1_T[~trainidx]
+    test = control1[~trainidx]
     test = test.reset_index(drop=True)
-    train2 = control2_T[trainidx]
+    train2 = control2[trainidx]
     train2 = train2.reset_index(drop=True)
-    test2 = control2_T[~trainidx]
+    test2 = control2[~trainidx]
     test2 = test2.reset_index(drop=True)
     
     
-    trainmar = objective_fun(weights, train, train2)
+    trainidiff = objective_fun(weights, train, train2)
     ### train
     x0 = weights
     x0 += np.random.uniform(0.0, 0.1/n, n)
     
-    res = cma.fmin(objective_fun, x0=x0, sigma0=np.mean(x0), options=cmaopts, args=(train, train2), eval_initial_x=True)
+    res = cma.fmin(objective_fun, x0=x0, sigma0=0.01, options=cmaopts, args=(train, train2), eval_initial_x=True)
     
-    bestw = np.array(res[0])
+    bestw = np.array(res[5])
     bests = np.vstack((bests, bestw))
-    bestw *= 10.0
+    #bestw *= 10.0
     
     
     ### test
-    testmar = objective_fun(weights, test, test2)
-    testwgtmar = objective_fun(bestw, test, test2)
+    testidiff = objective_fun(weights, test, test2)
+    testwgtidiff = objective_fun(bestw, test, test2)
     
     ### store results
     results[str(run) + "fitness"] = np.float(res[1])
-    results[str(run) + "solution"] = np.array(res[0])
+    results[str(run) + "solution"] = np.array(res[5])
     results[str(run) + 'trainidx'] = trainidx
-    results[str(run) + 'trainmar'] = trainmar
-    results[str(run) + 'testmar'] = testmar
-    results[str(run) + 'testwgtmar'] = testwgtmar
+    results[str(run) + 'trainidiff'] = trainidiff
+    results[str(run) + 'testidiff'] = testidiff
+    results[str(run) + 'testwgtidiff'] = testwgtidiff
 
     ## wrap up run
+    acc = eval_id(bestw, control1, control2)
     stoptime = datetime.timestamp(datetime.now())
     runtime = stoptime-starttime
     avg_runtime = (stoptime - totaltime) / (run+1)
     time_left = (stoptime - totaltime) - (avg_runtime * RUNS)
     
     ### output for this run
-    print("Run: " + str(run) + " out of " + str(RUNS) + " RESULTS")
+    print("\n Run: " + str(run) + " out of " + str(RUNS) + " RESULTS")
     print("-----------------------------------------------------------")
-    print("idiff training data:            {}.".format(trainmar))
-    print("idiff test data:                {}.".format(testmar))
+    print("idiff training data:            {}.".format(trainidiff))
+    print("idiff (weighted) test data:     {}.".format(testwgtidiff))
     print("best function value:            {}.".format(res[1]))
+    print("identification accuracy         {}.".format(round(acc,4)))
     print("-----------------------------------------------------------")
     print("Run Timestamp (in seconds)")
     print("-----------------------------------------------------------")
@@ -306,6 +301,3 @@ if SAVE:
     print("saving results in: " + fname)
     with open(fname,'wb') as f:
         pickle.dump(results, f)
-
-
-
