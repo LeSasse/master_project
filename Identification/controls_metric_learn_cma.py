@@ -61,7 +61,7 @@ session2_path = (
 RUNS = 50
 
 MIN, MAX = -1, 1
-MAXFEVALS = 20000
+MAXFEVALS = 50000
 TRAINPROP = 0.5
 SAVE = True
 
@@ -74,8 +74,10 @@ for col in session2_cd_transposed.columns:
     if col not in session1_cd_transposed.columns:
         session2_cd_transposed.drop([col], axis = 1, inplace=True)
 ##############################################################################
+'''
+the control dataframes have participants as rows, and brain areas as columns
 
-
+'''
 ### summing data ... ##########################################
 control1 = ldf.create_control_data(session1_cd_transposed, kind="sum", atlas_size=160).T
 control2 = ldf.create_control_data(session2_cd_transposed, kind="sum", atlas_size=160).T
@@ -112,6 +114,8 @@ def eval_id(w, data1, data2):
     ''' Evaluate weighted Identification ''' 
     data1 = data1.T
     data2 = data2.T
+    n = data1.shape[0]
+    d = data1.shape[1]
     
     A = np.array(data1)
     B = np.array(data2)
@@ -120,30 +124,36 @@ def eval_id(w, data1, data2):
     ## weighting columns
     Aw = (A.T * w).T
     Bw = (B.T * w).T
+
+    
     #return pd.DataFrame(Aw)
     
     data1 = pd.DataFrame(Aw)
-    data2 = pd.DataFrame(Bw)
-    N = data1.shape[0]
-    D = data1.shape[1]             
+    data2 = pd.DataFrame(Bw)            
     
     data1_ranked = data1.rank().T
     data2_ranked = data2.rank().T
 
     nbrs = NearestNeighbors(n_neighbors=1, metric='correlation', n_jobs= 1).fit(data1_ranked)
     distances, indices = nbrs.kneighbors(data2_ranked)
-    rate1 = np.mean(indices.T == np.array(list(range(D))))
+    rate1 = np.mean(indices.T == np.array(list(range(d))))
         
     nbrs = NearestNeighbors(n_neighbors=1, metric='correlation', n_jobs= 1).fit(data2_ranked)
     distances, indices = nbrs.kneighbors(data1_ranked)
-    rate2 = np.mean(indices.T == np.array(list(range(D))))
+    rate2 = np.mean(indices.T == np.array(list(range(d))))
     
     obj = -(rate1 + rate2)/2
     
     return obj
 
-
+'''
 ### get the idiff correlation matrix
+def corr(df1, df2):
+   return pd.concat([df1, df2], axis=1, keys=['df1', 'df2']).corr(method = "spearman").loc['df1', 'df2']
+
+faster implementation with numpy:
+'''
+
 def corr(df1, df2):    
     n = len(df1)
     #df1 = df1.rank()
@@ -154,20 +164,23 @@ def corr(df1, df2):
     return pd.DataFrame((v2.T.dot(v1) - sums / n) / stds / n,
                         df2.columns, df1.columns)
 
-
-
 def objective_fun(w, df1, df2):
+    ## transpose depends on input data, to get idiff, each column should corre-
+    ## spond to a participant
     df1, df2 = df1.T, df2.T
-
-    df1, df2 = df1.rank(), df2.rank()
     
+
     A, B, w = np.array(df1), np.array(df2), np.array(w)
+
     
     ## weighting columns
     Aw, Bw = (A.T * w).T, (B.T * w).T
+
     
     df1, df2 = pd.DataFrame(Aw), pd.DataFrame(Bw)
     
+    ## getting idiff
+    df1, df2 = df1.rank(), df2.rank()
     idiff_matrix = corr(df1, df2)
     idiff_matrix = np.array(idiff_matrix)
     
@@ -179,7 +192,7 @@ def objective_fun(w, df1, df2):
     np.fill_diagonal(mask, 0)
     off_diag = idiff_matrix[mask]
 
-    obj = -(np.mean(diag) - np.mean(off_diag))
+    obj = -100 * (np.mean(diag) - np.mean(off_diag))
     
     return obj
 
@@ -205,18 +218,19 @@ print("RUNS                                       {}.".format(RUNS))
 print("TRAINPROP                                  {}.".format(TRAINPROP))
 #print("idiff with starting weights:               {}.".format(round(defidiff,4)))
 print("-----------------------------------------------------------")
-print("\n Datasets:")
+print("\n \n Datasets: \n")
 print(control1)
+print("\n")
 print(control2)
 
-print("\n initial weights \n " + str(weights) )
+print("\n \n initial weights \n " + str(weights) )
 
 
 
 results = {}
 
 seed = np.random.choice(99999, 1)[0]
-print("seed: " + str(seed))
+print("\n seed: " + str(seed))
 np.random.seed(seed)
 results['seed'] = seed
 bests = np.empty((0, n))
@@ -224,10 +238,11 @@ totaltime = datetime.timestamp(datetime.now())
 ### running iterative optimisation
 for run in range(RUNS):
     starttime = datetime.timestamp(datetime.now())
-    print("starting run " + str(run))
+    print("\n \n starting run " + str(run))
     print("-----------------------------------------------------------")
     
     ### train-test split
+    
     trainidx = np.random.rand(len(control1)) < TRAINPROP
     train = control1[trainidx]
     train = train.reset_index(drop=True)
@@ -244,9 +259,9 @@ for run in range(RUNS):
     x0 = weights
     x0 += np.random.uniform(0.0, 0.1/n, n)
     
-    res = cma.fmin(objective_fun, x0=x0, sigma0=0.01, options=cmaopts, args=(train, train2), eval_initial_x=True)
+    res = cma.fmin(objective_fun, x0=x0, sigma0=0.001, options=cmaopts, args=(train, train2), eval_initial_x=True)
     
-    bestw = np.array(res[5])
+    bestw = np.array(res[0])
     bests = np.vstack((bests, bestw))
     #bestw *= 10.0
     
@@ -257,7 +272,7 @@ for run in range(RUNS):
     
     ### store results
     results[str(run) + "fitness"] = np.float(res[1])
-    results[str(run) + "solution"] = np.array(res[5])
+    results[str(run) + "solution"] = np.array(res[0])
     results[str(run) + 'trainidx'] = trainidx
     results[str(run) + 'trainidiff'] = trainidiff
     results[str(run) + 'testidiff'] = testidiff
@@ -271,7 +286,7 @@ for run in range(RUNS):
     time_left = (stoptime - totaltime) - (avg_runtime * RUNS)
     
     ### output for this run
-    print("\n Run: " + str(run) + " out of " + str(RUNS) + " RESULTS")
+    print("\n \n Run: " + str(run) + " out of " + str(RUNS) + " RESULTS")
     print("-----------------------------------------------------------")
     print("idiff training data:            {}.".format(trainidiff))
     print("idiff (weighted) test data:     {}.".format(testwgtidiff))

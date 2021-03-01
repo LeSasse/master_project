@@ -85,6 +85,32 @@ def get_conn_matrix(X):
     return np.eye(N) + square_connm
 
 
+def get_idiff_matrix(df1, df2):    
+    n = len(df1)
+    #df1 = df1.rank()
+    #df2 = df2.rank()
+    v1, v2 = df1.values, df2.values
+    sums = np.multiply.outer(v2.sum(0), v1.sum(0))
+    stds = np.multiply.outer(v2.std(0), v1.std(0))
+    return pd.DataFrame((v2.T.dot(v1) - sums / n) / stds / n,
+                        df2.columns, df1.columns)
+
+def get_idiff(idiff_matrix):
+    idiff_matrix = np.array(idiff_matrix)
+    
+    ## corr_self
+    diag = np.diagonal(idiff_matrix)
+    
+    ## corr_others
+    mask = np.ones(idiff_matrix.shape, dtype=bool)
+    np.fill_diagonal(mask, 0)
+    off_diag = idiff_matrix[mask]
+
+    idiff = 100 * (np.mean(diag) - np.mean(off_diag))
+    
+    return idiff
+
+
 def create_gradient_database(
     dataframe,
     subjects,
@@ -331,9 +357,12 @@ def create_control_data(connectivity_data, kind, atlas_size, roi=0):
         elif kind == "max":
             sub_val = subject_matrix.max(axis=1)
         elif kind == "sum":
+            #subject_matrix[subject_matrix < .4] = 0
             sub_val = subject_matrix.sum(axis=1)
         elif kind == "ROI":
             sub_val = subject_matrix[roi]
+        elif kind == "count":
+            sub_val = ((subject_matrix > .5) | (subject_matrix < -.5)).sum(axis=1)
 
         control_condition_data[index] = sub_val
 
