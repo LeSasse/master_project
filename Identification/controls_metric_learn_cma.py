@@ -82,6 +82,38 @@ the control dataframes have participants as rows, and brain areas as columns
 control1 = ldf.create_control_data(session1_cd_transposed, kind="sum", atlas_size=160).T
 control2 = ldf.create_control_data(session2_cd_transposed, kind="sum", atlas_size=160).T
 
+''' the above is a function from my supplementary script load_data_and function.py:
+    
+def create_control_data(connectivity_data, kind, atlas_size, roi=0):
+    control_condition_data = np.zeros((len(connectivity_data.columns), atlas_size))
+
+    for index, subject in enumerate(connectivity_data.columns):
+        subject_matrix = get_conn_matrix(connectivity_data[subject])
+        subject_matrix[subject_matrix == 1] = 0
+
+        if kind == "mean":
+            sub_val = subject_matrix.mean(axis=1)
+        elif kind == "std":
+            sub_val = subject_matrix.std(axis=1)
+        elif kind == "max":
+            sub_val = subject_matrix.max(axis=1)
+        elif kind == "sum":
+            #subject_matrix[subject_matrix < .4] = 0
+            sub_val = subject_matrix.sum(axis=1)
+        elif kind == "ROI":
+            sub_val = subject_matrix[roi]
+        elif kind == "count":
+            sub_val = ((subject_matrix > .5) | (subject_matrix < -.5)).sum(axis=1)
+
+        control_condition_data[index] = sub_val
+
+    control_condition_data = pd.DataFrame(control_condition_data)
+    control_condition_data = control_condition_data.T
+    control_condition_data.columns = list(connectivity_data.columns)
+
+    return control_condition_data
+'''
+
 
 
 '''
@@ -103,6 +135,33 @@ rate1 = ldf.identify(control1.T, control2.T)
 rate2 = ldf.identify(control2.T, control1.T)
 rate = (rate1 + rate2) / 2
 
+''' the above is a function from my supplementary script load_data_and function.py:
+    
+def identify(target, database, id_method="spearman"):
+
+     for col in target.columns:
+        if col not in database.columns:
+            target.drop([col], axis = 1, inplace=True)
+    
+    for col in database.columns:
+        if col not in target.columns:
+            database.drop([col], axis = 1, inplace=True)
+            
+    count = 0   # the count variable keeps track of iterations with
+                # accurate identification
+    for index, subject in enumerate(target.columns):
+        all_corr = database.corrwith(target.iloc[:, index], method=id_method)
+        
+        max_value = max(all_corr)
+        max_index = all_corr.index[all_corr == max_value]
+        
+        
+        if max_index[0] == subject:
+            count = count + 1
+
+    return count / len(target.columns)
+
+'''
 
 ## cma options 
 cmaopts = cma.CMAOptions()
@@ -152,6 +211,8 @@ def corr(df1, df2):
    return pd.concat([df1, df2], axis=1, keys=['df1', 'df2']).corr(method = "spearman").loc['df1', 'df2']
 
 faster implementation with numpy:
+    
+https://stackoverflow.com/questions/41823728/how-to-perform-correlation-between-two-dataframes-with-different-column-names/41823779
 '''
 
 def corr(df1, df2):    
@@ -226,6 +287,11 @@ print(control2)
 print("\n \n initial weights \n " + str(weights) )
 
 
+
+'''
+running the optimisation:
+    
+'''
 
 results = {}
 

@@ -293,7 +293,7 @@ def identify(target, database, id_method="spearman"):
             database.drop([col], axis = 1, inplace=True)
    
     
-    '''
+    
     count = 0   # the count variable keeps track of iterations with
                 # accurate identification
     for index, subject in enumerate(target.columns):
@@ -308,8 +308,6 @@ def identify(target, database, id_method="spearman"):
 
     return count / len(target.columns)
     '''
-
-    
     N = target.shape[0]
     D = target.shape[1]
     
@@ -319,7 +317,7 @@ def identify(target, database, id_method="spearman"):
     nbrs = NearestNeighbors(n_neighbors=1, metric='correlation', n_jobs= 1).fit(target_ranked)
     distances, indices = nbrs.kneighbors(database_ranked)
     return np.mean(indices.T == np.array(list(range(D))))
-    
+    '''
     
 def create_control_data(connectivity_data, kind, atlas_size, roi=0):
     """
